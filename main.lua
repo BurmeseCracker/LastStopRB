@@ -381,11 +381,11 @@ local function isBusItem(itemFolder)
     return false
 end
 
--- Auto PickUP Scan Loop
+-- Auto PickUP Continuous Loop (Range: Up to 100 studs)
 local autoPickupActive = false
 local function startAutoPickupLoop()
     task.spawn(function()
-        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED]</font>")
+        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - RANGE: 100 STUDS]</font>")
         
         while autoPickupActive do
             local char = player.Character
@@ -395,31 +395,28 @@ local function startAutoPickupLoop()
 
                 if itemContainer then
                     for _, itemFolder in ipairs(itemContainer:GetChildren()) do
+                        if not autoPickupActive then break end -- Exit immediately if toggled off
+                        
                         if not isBusItem(itemFolder) then
                             local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                             if targetPart and targetPart:IsA("BasePart") then
                                 local dist = (root.Position - targetPart.Position).Magnitude
                                 
-                                -- Range threshold: 10 studs
-                                if dist <= 10 then
+                                -- Range threshold set to 100 studs
+                                if dist <= 100 then
                                     local itemName, categoryName = identifyItemData(itemFolder)
                                     
                                     if not (categoryName == "Junk" or itemName == "Junk") or isAllowedJunk(itemName) then
                                         local colorData = getItemColor(itemName, categoryName)
-                                        local isNew = createOrUpdateESP(targetPart, colorData)
+                                        createOrUpdateESP(targetPart, colorData)
                                         
-                                        if isNew then
-                                            logMessage(string.format("Picked: <font color='%s'><b>%s</b></font> (%.1f studs)", colorData.Hex, itemName, dist))
-                                            
-                                            -- Fire ReplicaArrayInsert RemoteEvent
-                                            if replicaInsertRE then 
-                                                pcall(function() replicaInsertRE:FireServer(itemFolder) end) 
-                                            end
-                                            
-                                            -- Invoke EquipItem RemoteFunction
-                                            if equipItemRF then 
-                                                pcall(function() equipItemRF:InvokeServer(itemFolder) end) 
-                                            end
+                                        -- Continuously attempt to pick up items in range
+                                        if replicaInsertRE then 
+                                            pcall(function() replicaInsertRE:FireServer(itemFolder) end) 
+                                        end
+                                        
+                                        if equipItemRF then 
+                                            pcall(function() equipItemRF:InvokeServer(itemFolder) end) 
                                         end
                                     end
                                 end
@@ -428,7 +425,7 @@ local function startAutoPickupLoop()
                     end
                 end
             end
-            task.wait(0.5)
+            task.wait(0.2) -- Smooth continuous loop while ON
         end
     end)
 end
