@@ -406,17 +406,22 @@ local function startAutoPickupLoop()
                                 if dist <= 100 then
                                     local itemName, categoryName = identifyItemData(itemFolder)
                                     
-                                    if not (categoryName == "Junk" or itemName == "Junk") or isAllowedJunk(itemName) then
-                                        local colorData = getItemColor(itemName, categoryName)
-                                        createOrUpdateESP(targetPart, colorData)
-                                        
-                                        -- Continuously attempt to pick up items in range
-                                        if replicaInsertRE then 
-                                            pcall(function() replicaInsertRE:FireServer(itemFolder) end) 
-                                        end
-                                        
-                                        if equipItemRF then 
-                                            pcall(function() equipItemRF:InvokeServer(itemFolder) end) 
+                                    -- Check if item is a wheel (skip it)
+                                    local isWheel = string.find(string.lower(itemName), "wheel") or string.find(string.lower(itemFolder.Name), "wheel")
+                                    
+                                    if not isWheel then
+                                        if not (categoryName == "Junk" or itemName == "Junk") or isAllowedJunk(itemName) then
+                                            local colorData = getItemColor(itemName, categoryName)
+                                            createOrUpdateESP(targetPart, colorData)
+                                            
+                                            -- Continuously attempt to pick up items in range
+                                            if replicaInsertRE then 
+                                                pcall(function() replicaInsertRE:FireServer(itemFolder) end) 
+                                            end
+                                            
+                                            if equipItemRF then 
+                                                pcall(function() equipItemRF:InvokeServer(itemFolder) end) 
+                                            end
                                         end
                                     end
                                 end
