@@ -385,58 +385,78 @@ local function isBusItem(itemFolder)
     return false
 end
 
--- Auto PickUP Continuous Loop (Range: Up to 100 studs, skips within 50 studs of bus/base & skips wheels)
+-- Helper to check if an item folder contains active welds/attachments or wheels
+local function isWeldedOrAttachedOrWheel(itemFolder)
+    if string.find(string.lower(itemFolder.Name), "wheel") then
+        return true
+    end
+
+    for _, descendant in ipairs(itemFolder:GetDescendants()) do
+        local lowerDescName = string.lower(descendant.Name)
+        if string.find(lowerDescName, "wheel") then
+            return true
+        end
+
+        if descendant:IsA("Weld") or descendant:IsA("WeldConstraint") or descendant:IsA("Motor6D") or descendant:IsA("Attachment") then
+            if descendant.Part0 or descendant.Part1 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- Auto PickUP Continuous Loop
 local autoPickupActive = false
 local function startAutoPickupLoop()
     task.spawn(function()
-        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - RANGE: 100 STUDS]</font>")
+        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - IGNORING WHEELS/ATTACHMENTS ONLY NEAR BUS]</font>")
         
         while autoPickupActive do
             local char = player.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
                 local root = char.HumanoidRootPart
                 
-                -- Check distance to bus base (Skip auto-pickup if within 50 studs of the bus/base)
+                -- Check proximity to bus base
                 local busBase = getBusBase()
-                local nearBus = false
+                local tooCloseToBus = false
                 if busBase then
                     local busDist = (root.Position - busBase.Position).Magnitude
                     if busDist <= 50 then
-                        nearBus = true
+                        tooCloseToBus = true
                     end
                 end
 
-                if not nearBus then
-                    local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
-                    if itemContainer then
-                        for _, itemFolder in ipairs(itemContainer:GetChildren()) do
-                            if not autoPickupActive then break end -- Exit immediately if toggled off
-                            
-                            if not isBusItem(itemFolder) then
-                                local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
-                                if targetPart and targetPart:IsA("BasePart") then
-                                    local dist = (root.Position - targetPart.Position).Magnitude
+                local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
+                if itemContainer then
+                    for _, itemFolder in ipairs(itemContainer:GetChildren()) do
+                        if not autoPickupActive then break end 
+                        
+                        if not isBusItem(itemFolder) then
+                            local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
+                            if targetPart and targetPart:IsA("BasePart") then
+                                local dist = (root.Position - targetPart.Position).Magnitude
+                                
+                                -- Range threshold around you (up to 100 studs away)
+                                if dist <= 100 then
+                                    local itemName, categoryName = identifyItemData(itemFolder)
+                                    local lowerName = string.lower(itemName)
                                     
-                                    -- Range threshold set to 100 studs
-                                    if dist <= 100 then
-                                        local itemName, categoryName = identifyItemData(itemFolder)
-                                        
-                                        -- Check if item is a wheel (skip it)
-                                        local isWheel = string.find(string.lower(itemName), "wheel") or string.find(string.lower(itemFolder.Name), "wheel")
-                                        
-                                        if not isWheel then
-                                            if not (categoryName == "Junk" or itemName == "Junk") or isAllowedJunk(itemName) then
-                                                local colorData = getItemColor(itemName, categoryName)
-                                                createOrUpdateESP(targetPart, colorData)
-                                                
-                                                -- Continuously attempt to pick up items in range
-                                                if replicaInsertRE then 
-                                                    pcall(function() replicaInsertRE:FireServer(itemFolder) end) 
-                                                end
-                                                
-                                                if equipItemRF then 
-                                                    pcall(function() equipItemRF:InvokeServer(itemFolder) end) 
-                                                end
+                                    -- ONLY skip wheels/welds/attachments if you are currently NEAR the bus (<= 50 studs)
+                                    local shouldSkip = false
+                                    if tooCloseToBus then
+                                        if isWeldedOrAttachedOrWheel(itemFolder) or string.find(lowerName, "wheel") then
+                                            shouldSkip = true
+                                        end
+                                    end
+                                    
+                                    if not shouldSkip then
+                                        if not (categoryName == "Junk" or itemName == "Junk") or isAllowedJunk(itemName) then
+                                            local colorData = getItemColor(itemName, categoryName)
+                                            createOrUpdateESP(targetPart, colorData)
+                                            
+                                            if equipItemRF then 
+                                                pcall(function() equipItemRF:InvokeServer(itemFolder) end) 
                                             end
                                         end
                                     end
@@ -446,7 +466,7 @@ local function startAutoPickupLoop()
                     end
                 end
             end
-            task.wait(0.2) -- Smooth continuous loop while ON
+            task.wait(0.2)
         end
     end)
 end
@@ -454,4 +474,24 @@ end
 -- Toggle Handler
 autoPickupBtn.MouseButton1Click:Connect(function()
     autoPickupActive = not autoPickupActive
-    scannerFrame.Visible = au
+    scannerFrame.Visible = autoPickupActive
+
+    if autoPickupActive then
+        autoPickupBtn.Text = "Auto PickUP: ON"
+        autoPickupBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+        autoPickupBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        startAutoPickupLoop()
+    else
+        autoPickupBtn.Text = "Auto PickUP: OFF"
+        autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        removeAllESPColors()
+        logMessage("<font color='#FF5555'>[AUTO PICKUP STOPPED]</font>")
+    end
+end)
+
+exitButton.MouseButton1Click:Connect(function()
+    autoPickupActive = false
+    removeAllESPColors()
+    screenGui:Destroy()
+end)
