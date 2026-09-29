@@ -106,7 +106,7 @@ screenGui.DisplayOrder = 999999999
 screenGui.Parent = parentContainer
 
 --------------------------------------------------------------------------------
--- 1. MAIN MENU FRAME
+-- MAIN MENU FRAME
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
@@ -183,81 +183,8 @@ pickupCorner.CornerRadius = UDim.new(0, 6)
 pickupCorner.Parent = autoPickupBtn
 
 --------------------------------------------------------------------------------
--- 2. LOG CONSOLE FRAME
---------------------------------------------------------------------------------
-local scannerFrame = Instance.new("Frame")
-scannerFrame.Name = "ItemScannerFrame"
-scannerFrame.Size = UDim2.new(0, 320, 0, 230)
-scannerFrame.Position = UDim2.new(0.55, -160, 0.5, -115)
-scannerFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-scannerFrame.BorderSizePixel = 0
-scannerFrame.Active = true
-scannerFrame.Visible = false
-scannerFrame.Parent = screenGui
-
-local sCorner = Instance.new("UICorner")
-sCorner.CornerRadius = UDim.new(0, 8)
-sCorner.Parent = scannerFrame
-
-enableDrag(scannerFrame)
-
-local sTitleLabel = Instance.new("TextLabel")
-sTitleLabel.Name = "Title"
-sTitleLabel.Size = UDim2.new(0.9, 0, 0, 30)
-sTitleLabel.Position = UDim2.new(0.04, 0, 0, 5)
-sTitleLabel.BackgroundTransparency = 1
-sTitleLabel.Text = "Auto PickUP Logs"
-sTitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-sTitleLabel.TextSize = 14
-sTitleLabel.Font = Enum.Font.SourceSansBold
-sTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-sTitleLabel.Parent = scannerFrame
-
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Name = "LogConsole"
-scrollFrame.Size = UDim2.new(0.92, 0, 0, 180)
-scrollFrame.Position = UDim2.new(0.04, 0, 0, 40)
-scrollFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
-scrollFrame.BorderSizePixel = 0
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-scrollFrame.ScrollBarThickness = 8
-scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 120, 200)
-scrollFrame.ScrollBarImageTransparency = 0.2
-scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
-scrollFrame.Parent = scannerFrame
-
-local scrollCorner = Instance.new("UICorner")
-scrollCorner.CornerRadius = UDim.new(0, 4)
-scrollCorner.Parent = scrollFrame
-
-local logText = Instance.new("TextLabel")
-logText.Name = "LogText"
-logText.Size = UDim2.new(1, -16, 0, 0)
-logText.Position = UDim2.new(0, 5, 0, 5)
-logText.BackgroundTransparency = 1
-logText.RichText = true
-logText.Text = "<font color='#78DC78'>[LOGS INITIALIZED]</font>\nToggle Auto PickUP ON to start."
-logText.TextColor3 = Color3.fromRGB(255, 255, 255)
-logText.TextSize = 11
-logText.Font = Enum.Font.Code
-logText.TextXAlignment = Enum.TextXAlignment.Left
-logText.TextYAlignment = Enum.TextYAlignment.Top
-logText.TextWrapped = true
-logText.AutomaticSize = Enum.AutomaticSize.Y
-logText.Parent = scrollFrame
-
---------------------------------------------------------------------------------
 -- LOGIC & SYSTEMS
 --------------------------------------------------------------------------------
-local maxLogs = 100
-local logHistory = {}
-local function logMessage(msg)
-    table.insert(logHistory, string.format("[%s] %s", os.date("%X"), msg))
-    if #logHistory > maxLogs then table.remove(logHistory, 1) end
-    logText.Text = table.concat(logHistory, "\n")
-    task.defer(function() scrollFrame.CanvasPosition = Vector2.new(0, scrollFrame.AbsoluteCanvasSize.Y) end)
-end
 
 -- Helper to get Bus Base part
 local function getBusBase()
@@ -385,7 +312,6 @@ local function isBusItem(itemFolder)
     return false
 end
 
--- Check to block tutorial items anywhere
 local function isTutorialItem(itemFolder)
     local current = itemFolder
     while current and current ~= Workspace do
@@ -398,43 +324,21 @@ local function isTutorialItem(itemFolder)
     return false
 end
 
--- Check if item has a ManualWeld, Weld, or Motor6D
-local function hasManualWeld(itemFolder)
-    for _, descendant in ipairs(itemFolder:GetDescendants()) do
-        if descendant:IsA("ManualWeld") or descendant:IsA("Weld") or descendant:IsA("WeldConstraint") or descendant:IsA("Motor6D") then
-            return true
-        end
-    end
-    return false
-end
-
--- Auto PickUP Continuous Loop (Ultra-fast execution)
+-- Auto PickUP Continuous Loop
 local autoPickupActive = false
 local function startAutoPickupLoop()
     task.spawn(function()
-        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - NEAR BUS WELD BLOCK ACTIVE]</font>")
-        
         while autoPickupActive do
             local char = player.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
                 local root = char.HumanoidRootPart
-                
-                -- Check proximity to bus base (50 studs)
                 local busBase = getBusBase()
-                local tooCloseToBus = false
-                if busBase then
-                    local busDist = (root.Position - busBase.Position).Magnitude
-                    if busDist <= 50 then
-                        tooCloseToBus = true
-                    end
-                end
 
                 local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
                 if itemContainer then
                     for _, itemFolder in ipairs(itemContainer:GetChildren()) do
                         if not autoPickupActive then break end 
                         
-                        -- Skip Bus items and Tutorial items anywhere
                         if not isBusItem(itemFolder) and not isTutorialItem(itemFolder) then
                             local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                             if targetPart and targetPart:IsA("BasePart") then
@@ -444,10 +348,9 @@ local function startAutoPickupLoop()
                                     local itemName, categoryName = identifyItemData(itemFolder)
                                     
                                     local shouldSkip = false
-                                    -- ONLY block wheels, tires, left/right parts, and ManualWelds when close to the bus
-                                    if tooCloseToBus then
-                                        local combinedNames = string.lower(itemName .. " " .. itemFolder.Name)
-                                        if string.find(combinedNames, "wheel") or string.find(combinedNames, "tire") or string.find(combinedNames, "right") or string.find(combinedNames, "left") or hasManualWeld(itemFolder) then
+                                    if busBase then
+                                        local itemToBusDist = (targetPart.Position - busBase.Position).Magnitude
+                                        if itemToBusDist <= 50 then
                                             shouldSkip = true
                                         end
                                     end
@@ -472,7 +375,7 @@ local function startAutoPickupLoop()
                     end
                 end
             end
-            task.wait(0.05) -- Ultra-fast loop delay
+            task.wait(0.05)
         end
     end)
 end
@@ -480,7 +383,6 @@ end
 -- Toggle Handler
 autoPickupBtn.MouseButton1Click:Connect(function()
     autoPickupActive = not autoPickupActive
-    scannerFrame.Visible = autoPickupActive
 
     if autoPickupActive then
         autoPickupBtn.Text = "Auto PickUP: ON"
@@ -492,7 +394,6 @@ autoPickupBtn.MouseButton1Click:Connect(function()
         autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
         removeAllESPColors()
-        logMessage("<font color='#FF5555'>[AUTO PICKUP STOPPED]</font>")
     end
 end)
 
