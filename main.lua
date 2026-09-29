@@ -128,7 +128,7 @@ titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(0.8, 0, 0, 30)
 titleLabel.Position = UDim2.new(0.05, 0, 0, 5)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Last Stop v1"
+titleLabel.Text = "Last Stop v1 (Fast)"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 16
 titleLabel.Font = Enum.Font.SourceSansBold
@@ -385,38 +385,24 @@ local function isBusItem(itemFolder)
     return false
 end
 
--- Ultra-strict check for wheels (left/right) and attached vehicle parts near the bus
-local function isProtectedBusPart(itemFolder)
+-- Strict check to completely block any tutorial-related items/wheels
+local function isTutorialItem(itemFolder)
     local current = itemFolder
     while current and current ~= Workspace do
         local nameLower = string.lower(current.Name)
-        if string.find(nameLower, "wheel") or string.find(nameLower, "tire") or string.find(nameLower, "right") or string.find(nameLower, "left") or string.find(nameLower, "bus") then
-            if current ~= Workspace.ITEM_CONTAINER then
-                return true
-            end
-        end
-        current = current.Parent
-    end
-
-    for _, descendant in ipairs(itemFolder:GetDescendants()) do
-        local dNameLower = string.lower(descendant.Name)
-        if string.find(dNameLower, "wheel") or string.find(dNameLower, "tire") or string.find(dNameLower, "rightwheel") or string.find(dNameLower, "leftwheel") then
+        if string.find(nameLower, "tutorial") then
             return true
         end
-        if descendant:IsA("Weld") or descendant:IsA("WeldConstraint") or descendant:IsA("Motor6D") or descendant:IsA("Attachment") then
-            if descendant.Part0 or descendant.Part1 then
-                return true
-            end
-        end
+        current = current.Parent
     end
     return false
 end
 
--- Auto PickUP Continuous Loop
+-- Auto PickUP Continuous Loop (Ultra-fast execution)
 local autoPickupActive = false
 local function startAutoPickupLoop()
     task.spawn(function()
-        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - STRICT RIGHT/LEFT WHEEL & ATTACHED BLOCK ACTIVE NEAR BUS]</font>")
+        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - ULTRA FAST MODE]</font>")
         
         while autoPickupActive do
             local char = player.Character
@@ -438,7 +424,7 @@ local function startAutoPickupLoop()
                     for _, itemFolder in ipairs(itemContainer:GetChildren()) do
                         if not autoPickupActive then break end 
                         
-                        if not isBusItem(itemFolder) then
+                        if not isBusItem(itemFolder) and not isTutorialItem(itemFolder) then
                             local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                             if targetPart and targetPart:IsA("BasePart") then
                                 local dist = (root.Position - targetPart.Position).Magnitude
@@ -446,11 +432,10 @@ local function startAutoPickupLoop()
                                 if dist <= 100 then
                                     local itemName, categoryName = identifyItemData(itemFolder)
                                     
-                                    -- If near the bus, enforce strict blocking on wheels, tires, right/left parts, and welded items
                                     local shouldSkip = false
                                     if tooCloseToBus then
                                         local combinedNames = string.lower(itemName .. " " .. itemFolder.Name)
-                                        if string.find(combinedNames, "wheel") or string.find(combinedNames, "tire") or string.find(combinedNames, "right") or string.find(combinedNames, "left") or isProtectedBusPart(itemFolder) then
+                                        if string.find(combinedNames, "wheel") or string.find(combinedNames, "tire") or string.find(combinedNames, "right") or string.find(combinedNames, "left") then
                                             shouldSkip = true
                                         end
                                     end
@@ -461,11 +446,11 @@ local function startAutoPickupLoop()
                                             createOrUpdateESP(targetPart, colorData)
                                             
                                             if replicaInsertRE then 
-                                                pcall(function() replicaInsertRE:FireServer(itemFolder) end) 
+                                                task.spawn(function() replicaInsertRE:FireServer(itemFolder) end) 
                                             end
                                             
                                             if equipItemRF then 
-                                                pcall(function() equipItemRF:InvokeServer(itemFolder) end) 
+                                                task.spawn(function() equipItemRF:InvokeServer(itemFolder) end) 
                                             end
                                         end
                                     end
@@ -475,7 +460,7 @@ local function startAutoPickupLoop()
                     end
                 end
             end
-            task.wait(0.2)
+            task.wait(0.05) -- Reduced delay for lightning-fast pickups
         end
     end)
 end
