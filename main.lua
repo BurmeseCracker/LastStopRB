@@ -385,7 +385,7 @@ local function isBusItem(itemFolder)
     return false
 end
 
--- Strict check to completely block any tutorial-related items/wheels
+-- Check to completely block any tutorial-related items/wheels
 local function isTutorialItem(itemFolder)
     local current = itemFolder
     while current and current ~= Workspace do
@@ -398,11 +398,21 @@ local function isTutorialItem(itemFolder)
     return false
 end
 
+-- Check to block any item containing a ManualWeld, Weld, or Motor6D anywhere inside it
+local function hasManualWeld(itemFolder)
+    for _, descendant in ipairs(itemFolder:GetDescendants()) do
+        if descendant:IsA("ManualWeld") or descendant:IsA("Weld") or descendant:IsA("WeldConstraint") or descendant:IsA("Motor6D") then
+            return true
+        end
+    end
+    return false
+end
+
 -- Auto PickUP Continuous Loop (Ultra-fast execution)
 local autoPickupActive = false
 local function startAutoPickupLoop()
     task.spawn(function()
-        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - ULTRA FAST MODE]</font>")
+        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - MANUAL WELD BLOCK ACTIVE]</font>")
         
         while autoPickupActive do
             local char = player.Character
@@ -424,7 +434,8 @@ local function startAutoPickupLoop()
                     for _, itemFolder in ipairs(itemContainer:GetChildren()) do
                         if not autoPickupActive then break end 
                         
-                        if not isBusItem(itemFolder) and not isTutorialItem(itemFolder) then
+                        -- Skip Bus items, Tutorial items, and items containing ManualWelds/Welds
+                        if not isBusItem(itemFolder) and not isTutorialItem(itemFolder) and not hasManualWeld(itemFolder) then
                             local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                             if targetPart and targetPart:IsA("BasePart") then
                                 local dist = (root.Position - targetPart.Position).Magnitude
@@ -460,7 +471,7 @@ local function startAutoPickupLoop()
                     end
                 end
             end
-            task.wait(0.05) -- Reduced delay for lightning-fast pickups
+            task.wait(0.05) -- Ultra-fast loop delay
         end
     end)
 end
