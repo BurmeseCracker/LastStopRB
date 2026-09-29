@@ -5,98 +5,13 @@ local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 
 local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
 -- Clean existing UI & ESP
 if CoreGui:FindFirstChild("LastStopHub") then CoreGui.LastStopHub:Destroy() end
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("LastStopHub") then player.PlayerGui.LastStopHub:Destroy() end
+if playerGui:FindFirstChild("LastStopHub") then playerGui.LastStopHub:Destroy() end
 
-local parentContainer
-local success = pcall(function() parentContainer = CoreGui end)
-if not success or not parentContainer then parentContainer = player:WaitForChild("PlayerGui") end
-
--- Remote Helpers
-local replicaInsertRE = ReplicatedStorage:WaitForChild("ClientSource", 5) 
-    and ReplicatedStorage.ClientSource:WaitForChild("ReplicaRemoteEvents", 5) 
-    and ReplicatedStorage.ClientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayInsert")
-
-local equipItemRF = ReplicatedStorage:WaitForChild("ClientSource", 5) 
-    and ReplicatedStorage.ClientSource:WaitForChild("Mutual", 5) 
-    and ReplicatedStorage.ClientSource.Mutual:WaitForChild("Packages", 5) 
-    and ReplicatedStorage.ClientSource.Mutual.Packages:WaitForChild("Knit", 5) 
-    and ReplicatedStorage.ClientSource.Mutual.Packages.Knit:WaitForChild("Services", 5) 
-    and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services:WaitForChild("ItemService", 5) 
-    and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService:WaitForChild("RF", 5) 
-    and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService.RF:FindFirstChild("EquipItem")
-
--- Color Mapping
-local ITEM_COLORS = {
-    ["Medic"]       = {Color = Color3.fromRGB(255, 60, 60),   Hex = "#FF3C3C"},
-    ["Medical"]     = {Color = Color3.fromRGB(255, 60, 60),   Hex = "#FF3C3C"},
-    ["Bandage"]     = {Color = Color3.fromRGB(255, 60, 60),   Hex = "#FF3C3C"},
-    ["Medkit"]      = {Color = Color3.fromRGB(255, 60, 60),   Hex = "#FF3C3C"},
-    ["Weapon"]      = {Color = Color3.fromRGB(50, 220, 100),  Hex = "#32DC64"},
-    ["Weapons"]     = {Color = Color3.fromRGB(50, 220, 100),  Hex = "#32DC64"},
-    ["Firearm"]     = {Color = Color3.fromRGB(50, 220, 100),  Hex = "#32DC64"},
-    ["Gun"]         = {Color = Color3.fromRGB(50, 220, 100),  Hex = "#32DC64"},
-    ["Ammo"]        = {Color = Color3.fromRGB(50, 220, 100),  Hex = "#32DC64"},
-    ["Junk"]        = {Color = Color3.fromRGB(204, 204, 204), Hex = "#CCCCCC"},
-    ["Rope"]        = {Color = Color3.fromRGB(204, 204, 204), Hex = "#CCCCCC"},
-    ["Scrap"]       = {Color = Color3.fromRGB(204, 204, 204), Hex = "#CCCCCC"},
-    ["Wood"]        = {Color = Color3.fromRGB(204, 204, 204), Hex = "#CCCCCC"},
-    ["Pipe"]        = {Color = Color3.fromRGB(204, 204, 204), Hex = "#CCCCCC"},
-    ["Coal"]        = {Color = Color3.fromRGB(204, 204, 204), Hex = "#CCCCCC"},
-    ["Charm"]       = {Color = Color3.fromRGB(255, 215, 0),   Hex = "#FFD700"},
-    ["Charms"]      = {Color = Color3.fromRGB(255, 215, 0),   Hex = "#FFD700"},
-    ["Rare"]        = {Color = Color3.fromRGB(255, 215, 0),   Hex = "#FFD700"},
-    ["Key"]         = {Color = Color3.fromRGB(255, 215, 0),   Hex = "#FFD700"},
-    ["Food"]        = {Color = Color3.fromRGB(100, 200, 255), Hex = "#64C8FF"},
-    ["Drink"]       = {Color = Color3.fromRGB(100, 200, 255), Hex = "#64C8FF"},
-    ["Consumable"]  = {Color = Color3.fromRGB(100, 200, 255), Hex = "#64C8FF"},
-    ["Default"]     = {Color = Color3.fromRGB(204, 204, 204), Hex = "#CCCCCC"}
-}
-
-local function getItemColor(itemName, categoryName)
-    if ITEM_COLORS[itemName] then return ITEM_COLORS[itemName] end
-    if categoryName and ITEM_COLORS[categoryName] then return ITEM_COLORS[categoryName] end
-    
-    local lowerName = string.lower(itemName)
-    if string.find(lowerName, "band") or string.find(lowerName, "med") or string.find(lowerName, "heal") then return ITEM_COLORS["Medic"] end
-    if string.find(lowerName, "gun") or string.find(lowerName, "weapon") or string.find(lowerName, "ammo") or string.find(lowerName, "rifle") or string.find(lowerName, "pistol") then return ITEM_COLORS["Weapon"] end
-    if string.find(lowerName, "charm") or string.find(lowerName, "rare") or string.find(lowerName, "key") then return ITEM_COLORS["Charm"] end
-    if string.find(lowerName, "food") or string.find(lowerName, "drink") or string.find(lowerName, "water") or string.find(lowerName, "apple") or string.find(lowerName, "can") then return ITEM_COLORS["Food"] end
-    return ITEM_COLORS["Default"]
-end
-
-local function isAllowedJunk(itemName)
-    local lower = string.lower(itemName)
-    return string.find(lower, "wood") 
-        or string.find(lower, "scrap") 
-        or string.find(lower, "pipe") 
-        or string.find(lower, "coal")
-end
-
-local function enableDrag(frame)
-    local dragging, dragInput, dragStart, startPos
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
-        end
-    end)
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-end
+local parentContainer = playerGui
 
 -- ScreenGui Setup
 local screenGui = Instance.new("ScreenGui")
@@ -121,6 +36,29 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 8)
 corner.Parent = mainFrame
 
+-- Simple Drag Function
+local function enableDrag(frame)
+    local dragging, dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
 enableDrag(mainFrame)
 
 local titleLabel = Instance.new("TextLabel")
@@ -128,7 +66,7 @@ titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(0.8, 0, 0, 30)
 titleLabel.Position = UDim2.new(0.05, 0, 0, 5)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Last Stop v1 (Fast)"
+titleLabel.Text = "Last Stop v1 (No Junk)"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 16
 titleLabel.Font = Enum.Font.SourceSansBold
@@ -185,34 +123,24 @@ pickupCorner.Parent = autoPickupBtn
 --------------------------------------------------------------------------------
 -- LOGIC & SYSTEMS
 --------------------------------------------------------------------------------
-
--- Helper to get Bus Base part
 local function getBusBase()
     return Workspace:FindFirstChild("ITEM_CONTAINER")
         and Workspace.ITEM_CONTAINER:FindFirstChild("Bus")
         and Workspace.ITEM_CONTAINER.Bus:FindFirstChild("Base")
 end
 
--- Teleport Logic
 local tpToggle = false
-local function teleportToBus()
-    local busBase = getBusBase()
-    if busBase and player.Character then
-        local root = player.Character:FindFirstChild("HumanoidRootPart")
-        if root then
-            root.AssemblyLinearVelocity = Vector3.zero
-            root.CFrame = busBase.CFrame * CFrame.new(0, 3, 0)
-        end
-    end
-end
-
 tpButton.MouseButton1Click:Connect(function()
     tpToggle = not tpToggle
     if tpToggle then
         tpButton.Text = "Teleport to Bus: ON"
         tpButton.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
         tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        teleportToBus()
+        local busBase = getBusBase()
+        if busBase and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+            player.Character.HumanoidRootPart.CFrame = busBase.CFrame * CFrame.new(0, 3, 0)
+        end
     else
         tpButton.Text = "Teleport to Bus: OFF"
         tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -220,26 +148,7 @@ tpButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- ESP System
 local trackedESP = {}
-
-local function createOrUpdateESP(targetPart, colorData)
-    if not targetPart then return end
-    if not targetPart:FindFirstChild("ItemScannerESP") then
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "ItemScannerESP"
-        highlight.Adornee = targetPart.Parent:IsA("Model") and targetPart.Parent or targetPart
-        highlight.FillColor = colorData.Color
-        highlight.FillTransparency = 0.4
-        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-        highlight.OutlineTransparency = 0
-        highlight.Parent = targetPart
-        trackedESP[targetPart] = highlight
-        return true
-    end
-    return false
-end
-
 local function removeAllESPColors()
     for part, highlight in pairs(trackedESP) do
         if highlight then highlight:Destroy() end
@@ -247,128 +156,74 @@ local function removeAllESPColors()
     table.clear(trackedESP)
 end
 
--- Asset Caching
-local function getMeshId(obj)
-    return (obj:IsA("MeshPart") or obj:IsA("SpecialMesh")) and obj.MeshId or nil
-end
+-- Caching categories (Junk excluded)
+local allowedTemplateNames = {}
+local allowedMeshIds = {}
 
-local function getItemDataFromAssetPath(descendant, itemAssetsRoot)
-    local current = descendant
-    local highestModelParent = nil
-    local categoryName = "Junk"
-
-    while current and current ~= itemAssetsRoot do
-        if current.Name == "Model" and current.Parent and current.Parent ~= itemAssetsRoot then
-            highestModelParent = current.Parent.Name
-            if current.Parent.Parent and current.Parent.Parent ~= itemAssetsRoot then categoryName = current.Parent.Parent.Name end
-        end
-        current = current.Parent
-    end
-
-    return highestModelParent or (descendant.Parent and descendant.Parent.Name) or "Unknown", categoryName
-end
-
-local assetMeshCache = nil
-local function buildAssetCache()
-    assetMeshCache = {}
-    local itemAssets = ReplicatedStorage:FindFirstChild("Assets")
-    if itemAssets then
-        itemAssets = itemAssets:FindFirstChild("Mutual")
-        if itemAssets then itemAssets = itemAssets:FindFirstChild("Item") end
-    end
-    if not itemAssets then return end
-
-    for _, descendant in ipairs(itemAssets:GetDescendants()) do
-        local meshId = getMeshId(descendant)
-        if meshId and meshId ~= "" then
-            local realItemName, categoryName = getItemDataFromAssetPath(descendant, itemAssets)
-            assetMeshCache[meshId] = {Name = realItemName, Category = categoryName}
+local function buildCategoryCaches()
+    allowedTemplateNames = {}
+    allowedMeshIds = {}
+    
+    local success, categoriesFolder = pcall(function()
+        return ReplicatedStorage.Assets.Mutual.Item.Category
+    end)
+    
+    if not success or not categoriesFolder then return end
+    
+    local targetCategories = {"Weapon", "Valuable", "Medic", "Armor", "Ammo", "Food", "Resources"}
+    
+    for _, catName in ipairs(targetCategories) do
+        local catFolder = categoriesFolder:FindFirstChild(catName)
+        if catFolder then
+            for _, itemTemplate in ipairs(catFolder:GetChildren()) do
+                allowedTemplateNames[string.lower(itemTemplate.Name)] = true
+                for _, desc in ipairs(itemTemplate:GetDescendants()) do
+                    if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and desc.MeshId ~= "" then
+                        allowedMeshIds[desc.MeshId] = true
+                    end
+                end
+            end
         end
     end
 end
 
-local function identifyItemData(itemFolder)
-    if not assetMeshCache then buildAssetCache() end
-    for _, child in ipairs(itemFolder:GetDescendants()) do
-        local meshId = getMeshId(child)
-        if meshId and assetMeshCache and assetMeshCache[meshId] then
-            return assetMeshCache[meshId].Name, assetMeshCache[meshId].Category
-        end
+local function isAllowedCategoryItem(itemFolder)
+    if not next(allowedTemplateNames) and not next(allowedMeshIds) then
+        buildCategoryCaches()
     end
-    return "Unknown Item", "Junk"
-end
-
-local function isBusItem(itemFolder)
-    if itemFolder.Name == "Bus" or string.find(string.lower(itemFolder.Name), "bus") then
+    if allowedTemplateNames[string.lower(itemFolder.Name)] then
         return true
     end
-    local ancestor = itemFolder.Parent
-    while ancestor do
-        if ancestor.Name == "Bus" or string.find(string.lower(ancestor.Name), "bus") then
+    for _, desc in ipairs(itemFolder:GetDescendants()) do
+        if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and allowedMeshIds[desc.MeshId] then
             return true
         end
-        ancestor = ancestor.Parent
     end
     return false
 end
 
-local function isTutorialItem(itemFolder)
-    local current = itemFolder
-    while current and current ~= Workspace do
-        local nameLower = string.lower(current.Name)
-        if string.find(nameLower, "tutorial") then
-            return true
-        end
-        current = current.Parent
-    end
-    return false
-end
-
--- Auto PickUP Continuous Loop
+-- Auto PickUp Loop
 local autoPickupActive = false
 local function startAutoPickupLoop()
     task.spawn(function()
+        buildCategoryCaches()
+        local replicaInsertRE = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("ReplicaRemoteEvents") and ReplicatedStorage.ClientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayInsert")
+        local equipItemRF = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("Mutual") and ReplicatedStorage.ClientSource.Mutual:FindFirstChild("Packages") and ReplicatedStorage.ClientSource.Mutual.Packages:FindFirstChild("Knit") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit:FindFirstChild("Services") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services:FindFirstChild("ItemService") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService:FindFirstChild("RF") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService.RF:FindFirstChild("EquipItem")
+
         while autoPickupActive do
             local char = player.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
                 local root = char.HumanoidRootPart
-                local busBase = getBusBase()
-
                 local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
                 if itemContainer then
                     for _, itemFolder in ipairs(itemContainer:GetChildren()) do
                         if not autoPickupActive then break end 
-                        
-                        if not isBusItem(itemFolder) and not isTutorialItem(itemFolder) then
+                        if isAllowedCategoryItem(itemFolder) then
                             local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                             if targetPart and targetPart:IsA("BasePart") then
-                                local dist = (root.Position - targetPart.Position).Magnitude
-                                
-                                if dist <= 100 then
-                                    local itemName, categoryName = identifyItemData(itemFolder)
-                                    
-                                    local shouldSkip = false
-                                    if busBase then
-                                        local itemToBusDist = (targetPart.Position - busBase.Position).Magnitude
-                                        if itemToBusDist <= 50 then
-                                            shouldSkip = true
-                                        end
-                                    end
-                                    
-                                    if not shouldSkip then
-                                        if not (categoryName == "Junk" or itemName == "Junk") or isAllowedJunk(itemName) then
-                                            local colorData = getItemColor(itemName, categoryName)
-                                            createOrUpdateESP(targetPart, colorData)
-                                            
-                                            if replicaInsertRE then 
-                                                task.spawn(function() replicaInsertRE:FireServer(itemFolder) end) 
-                                            end
-                                            
-                                            if equipItemRF then 
-                                                task.spawn(function() equipItemRF:InvokeServer(itemFolder) end) 
-                                            end
-                                        end
-                                    end
+                                if (root.Position - targetPart.Position).Magnitude <= 10000 then
+                                    if replicaInsertRE then task.spawn(function() replicaInsertRE:FireServer(itemFolder) end) end
+                                    if equipItemRF then task.spawn(function() equipItemRF:InvokeServer(itemFolder) end) end
                                 end
                             end
                         end
@@ -380,10 +235,8 @@ local function startAutoPickupLoop()
     end)
 end
 
--- Toggle Handler
 autoPickupBtn.MouseButton1Click:Connect(function()
     autoPickupActive = not autoPickupActive
-
     if autoPickupActive then
         autoPickupBtn.Text = "Auto PickUP: ON"
         autoPickupBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
