@@ -385,7 +385,7 @@ local function isBusItem(itemFolder)
     return false
 end
 
--- Check to completely block any tutorial-related items/wheels
+-- Check to block tutorial items anywhere
 local function isTutorialItem(itemFolder)
     local current = itemFolder
     while current and current ~= Workspace do
@@ -398,7 +398,7 @@ local function isTutorialItem(itemFolder)
     return false
 end
 
--- Check to block any item containing a ManualWeld, Weld, or Motor6D anywhere inside it
+-- Check if item has a ManualWeld, Weld, or Motor6D
 local function hasManualWeld(itemFolder)
     for _, descendant in ipairs(itemFolder:GetDescendants()) do
         if descendant:IsA("ManualWeld") or descendant:IsA("Weld") or descendant:IsA("WeldConstraint") or descendant:IsA("Motor6D") then
@@ -412,7 +412,7 @@ end
 local autoPickupActive = false
 local function startAutoPickupLoop()
     task.spawn(function()
-        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - MANUAL WELD BLOCK ACTIVE]</font>")
+        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - NEAR BUS WELD BLOCK ACTIVE]</font>")
         
         while autoPickupActive do
             local char = player.Character
@@ -434,8 +434,8 @@ local function startAutoPickupLoop()
                     for _, itemFolder in ipairs(itemContainer:GetChildren()) do
                         if not autoPickupActive then break end 
                         
-                        -- Skip Bus items, Tutorial items, and items containing ManualWelds/Welds
-                        if not isBusItem(itemFolder) and not isTutorialItem(itemFolder) and not hasManualWeld(itemFolder) then
+                        -- Skip Bus items and Tutorial items anywhere
+                        if not isBusItem(itemFolder) and not isTutorialItem(itemFolder) then
                             local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                             if targetPart and targetPart:IsA("BasePart") then
                                 local dist = (root.Position - targetPart.Position).Magnitude
@@ -444,9 +444,10 @@ local function startAutoPickupLoop()
                                     local itemName, categoryName = identifyItemData(itemFolder)
                                     
                                     local shouldSkip = false
+                                    -- ONLY block wheels, tires, left/right parts, and ManualWelds when close to the bus
                                     if tooCloseToBus then
                                         local combinedNames = string.lower(itemName .. " " .. itemFolder.Name)
-                                        if string.find(combinedNames, "wheel") or string.find(combinedNames, "tire") or string.find(combinedNames, "right") or string.find(combinedNames, "left") then
+                                        if string.find(combinedNames, "wheel") or string.find(combinedNames, "tire") or string.find(combinedNames, "right") or string.find(combinedNames, "left") or hasManualWeld(itemFolder) then
                                             shouldSkip = true
                                         end
                                     end
