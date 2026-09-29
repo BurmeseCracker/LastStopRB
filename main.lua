@@ -385,18 +385,24 @@ local function isBusItem(itemFolder)
     return false
 end
 
--- Helper to check if an item folder contains active welds/attachments or wheels
-local function isWeldedOrAttachedOrWheel(itemFolder)
-    if string.find(string.lower(itemFolder.Name), "wheel") then
-        return true
+-- Ultra-strict check for wheels (left/right) and attached vehicle parts near the bus
+local function isProtectedBusPart(itemFolder)
+    local current = itemFolder
+    while current and current ~= Workspace do
+        local nameLower = string.lower(current.Name)
+        if string.find(nameLower, "wheel") or string.find(nameLower, "tire") or string.find(nameLower, "right") or string.find(nameLower, "left") or string.find(nameLower, "bus") then
+            if current ~= Workspace.ITEM_CONTAINER then
+                return true
+            end
+        end
+        current = current.Parent
     end
 
     for _, descendant in ipairs(itemFolder:GetDescendants()) do
-        local lowerDescName = string.lower(descendant.Name)
-        if string.find(lowerDescName, "wheel") then
+        local dNameLower = string.lower(descendant.Name)
+        if string.find(dNameLower, "wheel") or string.find(dNameLower, "tire") or string.find(dNameLower, "rightwheel") or string.find(dNameLower, "leftwheel") then
             return true
         end
-
         if descendant:IsA("Weld") or descendant:IsA("WeldConstraint") or descendant:IsA("Motor6D") or descendant:IsA("Attachment") then
             if descendant.Part0 or descendant.Part1 then
                 return true
@@ -410,14 +416,14 @@ end
 local autoPickupActive = false
 local function startAutoPickupLoop()
     task.spawn(function()
-        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - IGNORING WHEELS/ATTACHMENTS ONLY NEAR BUS]</font>")
+        logMessage("<font color='#78DC78'>[AUTO PICKUP STARTED - STRICT RIGHT/LEFT WHEEL & ATTACHED BLOCK ACTIVE NEAR BUS]</font>")
         
         while autoPickupActive do
             local char = player.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
                 local root = char.HumanoidRootPart
                 
-                -- Check proximity to bus base
+                -- Check proximity to bus base (50 studs)
                 local busBase = getBusBase()
                 local tooCloseToBus = false
                 if busBase then
@@ -437,15 +443,14 @@ local function startAutoPickupLoop()
                             if targetPart and targetPart:IsA("BasePart") then
                                 local dist = (root.Position - targetPart.Position).Magnitude
                                 
-                                -- Range threshold around you (up to 100 studs away)
                                 if dist <= 100 then
                                     local itemName, categoryName = identifyItemData(itemFolder)
-                                    local lowerName = string.lower(itemName)
                                     
-                                    -- ONLY skip wheels/welds/attachments if you are currently NEAR the bus (<= 50 studs)
+                                    -- If near the bus, enforce strict blocking on wheels, tires, right/left parts, and welded items
                                     local shouldSkip = false
                                     if tooCloseToBus then
-                                        if isWeldedOrAttachedOrWheel(itemFolder) or string.find(lowerName, "wheel") then
+                                        local combinedNames = string.lower(itemName .. " " .. itemFolder.Name)
+                                        if string.find(combinedNames, "wheel") or string.find(combinedNames, "tire") or string.find(combinedNames, "right") or string.find(combinedNames, "left") or isProtectedBusPart(itemFolder) then
                                             shouldSkip = true
                                         end
                                     end
@@ -454,6 +459,10 @@ local function startAutoPickupLoop()
                                         if not (categoryName == "Junk" or itemName == "Junk") or isAllowedJunk(itemName) then
                                             local colorData = getItemColor(itemName, categoryName)
                                             createOrUpdateESP(targetPart, colorData)
+                                            
+                                            if replicaInsertRE then 
+                                                pcall(function() replicaInsertRE:FireServer(itemFolder) end) 
+                                            end
                                             
                                             if equipItemRF then 
                                                 pcall(function() equipItemRF:InvokeServer(itemFolder) end) 
