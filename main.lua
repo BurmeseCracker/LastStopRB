@@ -174,7 +174,7 @@ local function buildCategoryCaches()
         return ReplicatedStorage.Assets.Mutual.Item.Category
     end)
     if not success or not categoriesFolder then return end
-    local targetCategories = {"Weapon", "Valuable", "Medic", "Armor", "Ammo", "Food", "Resources"}
+    local targetCategories = {"Weapon", "Valuable", "Medic", "Armor", "Ammo", "Food", "Resources", "Junk", "Junks"}
     for _, catName in ipairs(targetCategories) do
         local catFolder = categoriesFolder:FindFirstChild(catName)
         if catFolder then
@@ -229,7 +229,7 @@ local function startAutoPickupLoop()
                         if not processedItems[itemFolder] and isAllowedCategoryItem(itemFolder) then
                             local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                             if targetPart and targetPart:IsA("BasePart") then
-                                if (root.Position - targetPart.Position).Magnitude <= 100 then
+                                if (root.Position - targetPart.Position).Magnitude <= 1000 then
                                     processedItems[itemFolder] = true
                                     if replicaInsertRE then task.spawn(function() replicaInsertRE:FireServer(itemFolder) end) end
                                     if equipItemRF then task.spawn(function() equipItemRF:InvokeServer(itemFolder) end) end
@@ -240,8 +240,8 @@ local function startAutoPickupLoop()
                 end
             end
 
-            cacheTimer = cacheTimer + 0.2
-            if cacheTimer >= 3 then
+            cacheTimer = cacheTimer + 0.1
+            if cacheTimer >= 2 then
                 cacheTimer = 0
                 table.clear(processedItems)
             end
