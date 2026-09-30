@@ -6,14 +6,12 @@ local CoreGui = game:GetService("CoreGui")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+local parentContainer = CoreGui
 
 -- Clean existing UI & ESP
 if CoreGui:FindFirstChild("LastStopHub") then CoreGui.LastStopHub:Destroy() end
 if playerGui:FindFirstChild("LastStopHub") then playerGui.LastStopHub:Destroy() end
 
-local parentContainer = playerGui
-
--- ScreenGui Setup
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "LastStopHub"
 screenGui.ResetOnSpawn = false
@@ -25,8 +23,8 @@ screenGui.Parent = parentContainer
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 220, 0, 160)
-mainFrame.Position = UDim2.new(0.35, -110, 0.5, -80)
+mainFrame.Size = UDim2.new(0, 220, 0, 260)
+mainFrame.Position = UDim2.new(0.35, -110, 0.5, -130)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -66,9 +64,9 @@ titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(0.8, 0, 0, 30)
 titleLabel.Position = UDim2.new(0.05, 0, 0, 5)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Last Stop v1 (No Junk)"
+titleLabel.Text = "Last Stop v1"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 16
+titleLabel.TextSize = 14
 titleLabel.Font = Enum.Font.SourceSansBold
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = mainFrame
@@ -88,15 +86,15 @@ local exitCorner = Instance.new("UICorner")
 exitCorner.CornerRadius = UDim.new(0, 4)
 exitCorner.Parent = exitButton
 
--- Main Toggle 1: Teleport to Bus
+-- Toggle 1: Teleport to Bus [F1]
 local tpButton = Instance.new("TextButton")
 tpButton.Name = "TpButton"
-tpButton.Size = UDim2.new(0.9, 0, 0, 45)
-tpButton.Position = UDim2.new(0.05, 0, 0.25, 0)
+tpButton.Size = UDim2.new(0.9, 0, 0, 35)
+tpButton.Position = UDim2.new(0.05, 0, 0.16, 0)
 tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-tpButton.Text = "Teleport to Bus: OFF"
+tpButton.Text = "Teleport to Bus [F1]: OFF"
 tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-tpButton.TextSize = 14
+tpButton.TextSize = 12
 tpButton.Font = Enum.Font.SourceSansBold
 tpButton.Parent = mainFrame
 
@@ -104,21 +102,37 @@ local tpCorner = Instance.new("UICorner")
 tpCorner.CornerRadius = UDim.new(0, 6)
 tpCorner.Parent = tpButton
 
--- Main Toggle 2: Auto PickUP Toggle Button
+-- Toggle 2: Auto PickUP [F3]
 local autoPickupBtn = Instance.new("TextButton")
 autoPickupBtn.Name = "AutoPickupBtn"
-autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 45)
-autoPickupBtn.Position = UDim2.new(0.05, 0, 0.60, 0)
+autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 35)
+autoPickupBtn.Position = UDim2.new(0.05, 0, 0.38, 0)
 autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-autoPickupBtn.Text = "Auto PickUP: OFF"
+autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
 autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-autoPickupBtn.TextSize = 14
+autoPickupBtn.TextSize = 12
 autoPickupBtn.Font = Enum.Font.SourceSansBold
 autoPickupBtn.Parent = mainFrame
 
 local pickupCorner = Instance.new("UICorner")
 pickupCorner.CornerRadius = UDim.new(0, 6)
 pickupCorner.Parent = autoPickupBtn
+
+-- Toggle 3: Entities ESP [F4]
+local npcEspBtn = Instance.new("TextButton")
+npcEspBtn.Name = "NpcEspBtn"
+npcEspBtn.Size = UDim2.new(0.9, 0, 0, 35)
+npcEspBtn.Position = UDim2.new(0.05, 0, 0.60, 0)
+npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+npcEspBtn.Text = "Entities ESP [F4]: OFF"
+npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+npcEspBtn.TextSize = 12
+npcEspBtn.Font = Enum.Font.SourceSansBold
+npcEspBtn.Parent = mainFrame
+
+local npcCorner = Instance.new("UICorner")
+npcCorner.CornerRadius = UDim.new(0, 6)
+npcCorner.Parent = npcEspBtn
 
 --------------------------------------------------------------------------------
 -- LOGIC & SYSTEMS
@@ -130,10 +144,10 @@ local function getBusBase()
 end
 
 local tpToggle = false
-tpButton.MouseButton1Click:Connect(function()
+local function toggleTeleport()
     tpToggle = not tpToggle
     if tpToggle then
-        tpButton.Text = "Teleport to Bus: ON"
+        tpButton.Text = "Teleport to Bus [F1]: ON"
         tpButton.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
         tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         local busBase = getBusBase()
@@ -142,36 +156,25 @@ tpButton.MouseButton1Click:Connect(function()
             player.Character.HumanoidRootPart.CFrame = busBase.CFrame * CFrame.new(0, 3, 0)
         end
     else
-        tpButton.Text = "Teleport to Bus: OFF"
+        tpButton.Text = "Teleport to Bus [F1]: OFF"
         tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
     end
-end)
-
-local trackedESP = {}
-local function removeAllESPColors()
-    for part, highlight in pairs(trackedESP) do
-        if highlight then highlight:Destroy() end
-    end
-    table.clear(trackedESP)
 end
+tpButton.MouseButton1Click:Connect(toggleTeleport)
 
--- Caching categories (Junk excluded)
+-- Item Caching categories
 local allowedTemplateNames = {}
 local allowedMeshIds = {}
 
 local function buildCategoryCaches()
     allowedTemplateNames = {}
     allowedMeshIds = {}
-    
     local success, categoriesFolder = pcall(function()
         return ReplicatedStorage.Assets.Mutual.Item.Category
     end)
-    
     if not success or not categoriesFolder then return end
-    
     local targetCategories = {"Weapon", "Valuable", "Medic", "Armor", "Ammo", "Food", "Resources"}
-    
     for _, catName in ipairs(targetCategories) do
         local catFolder = categoriesFolder:FindFirstChild(catName)
         if catFolder then
@@ -191,9 +194,7 @@ local function isAllowedCategoryItem(itemFolder)
     if not next(allowedTemplateNames) and not next(allowedMeshIds) then
         buildCategoryCaches()
     end
-    if allowedTemplateNames[string.lower(itemFolder.Name)] then
-        return true
-    end
+    if allowedTemplateNames[string.lower(itemFolder.Name)] then return true end
     for _, desc in ipairs(itemFolder:GetDescendants()) do
         if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and allowedMeshIds[desc.MeshId] then
             return true
@@ -202,13 +203,17 @@ local function isAllowedCategoryItem(itemFolder)
     return false
 end
 
--- Auto PickUp Loop
+-- Continuous Auto PickUp Loop (100 Studs Range)
 local autoPickupActive = false
+local processedItems = {}
+
 local function startAutoPickupLoop()
     task.spawn(function()
         buildCategoryCaches()
         local replicaInsertRE = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("ReplicaRemoteEvents") and ReplicatedStorage.ClientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayInsert")
         local equipItemRF = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("Mutual") and ReplicatedStorage.ClientSource.Mutual:FindFirstChild("Packages") and ReplicatedStorage.ClientSource.Mutual.Packages:FindFirstChild("Knit") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit:FindFirstChild("Services") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services:FindFirstChild("ItemService") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService:FindFirstChild("RF") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService.RF:FindFirstChild("EquipItem")
+
+        local cacheTimer = 0
 
         while autoPickupActive do
             local char = player.Character
@@ -216,12 +221,16 @@ local function startAutoPickupLoop()
                 local root = char.HumanoidRootPart
                 local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
                 if itemContainer then
-                    for _, itemFolder in ipairs(itemContainer:GetChildren()) do
+                    local children = itemContainer:GetChildren()
+                    for i = 1, #children do
+                        local itemFolder = children[i]
                         if not autoPickupActive then break end 
-                        if isAllowedCategoryItem(itemFolder) then
+                        
+                        if not processedItems[itemFolder] and isAllowedCategoryItem(itemFolder) then
                             local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                             if targetPart and targetPart:IsA("BasePart") then
-                                if (root.Position - targetPart.Position).Magnitude <= 10000 then
+                                if (root.Position - targetPart.Position).Magnitude <= 100 then
+                                    processedItems[itemFolder] = true
                                     if replicaInsertRE then task.spawn(function() replicaInsertRE:FireServer(itemFolder) end) end
                                     if equipItemRF then task.spawn(function() equipItemRF:InvokeServer(itemFolder) end) end
                                 end
@@ -230,28 +239,192 @@ local function startAutoPickupLoop()
                     end
                 end
             end
-            task.wait(0.05)
+
+            cacheTimer = cacheTimer + 0.2
+            if cacheTimer >= 3 then
+                cacheTimer = 0
+                table.clear(processedItems)
+            end
+
+            task.wait(0.2)
         end
     end)
 end
 
-autoPickupBtn.MouseButton1Click:Connect(function()
+local function toggleAutoPickup()
     autoPickupActive = not autoPickupActive
     if autoPickupActive then
-        autoPickupBtn.Text = "Auto PickUP: ON"
+        autoPickupBtn.Text = "Auto PickUP [F3]: ON"
         autoPickupBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
         autoPickupBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         startAutoPickupLoop()
     else
-        autoPickupBtn.Text = "Auto PickUP: OFF"
+        autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
         autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-        removeAllESPColors()
+        table.clear(processedItems)
+    end
+end
+autoPickupBtn.MouseButton1Click:Connect(toggleAutoPickup)
+
+-- Allowed Entity Names List
+local validEntities = {
+    ["bandit"] = true,
+    ["alien"] = true,
+    ["bigzombie"] = true,
+    ["bloater"] = true,
+    ["mummy"] = true,
+    ["parasite"] = true,
+    ["shark"] = true,
+    ["skeleton"] = true,
+    ["tinyzombie"] = true,
+    ["vampire"] = true,
+    ["zombie"] = true,
+}
+
+-- Entities ESP System with ParticleEmitter Color Auto-Detection
+local npcEspActive = false
+local npcESPTracked = {}
+
+local function removeNpcESP()
+    for _, highlight in pairs(npcESPTracked) do
+        if highlight then highlight:Destroy() end
+    end
+    table.clear(npcESPTracked)
+end
+
+-- Function to extract color from ParticleEmitter if present
+local function getParticleEmitterColor(entityFolder)
+    for _, desc in ipairs(entityFolder:GetDescendants()) do
+        if desc:IsA("ParticleEmitter") then
+            local colorSeq = desc.Color
+            if colorSeq and colorSeq.Keypoints and #colorSeq.Keypoints > 0 then
+                return colorSeq.Keypoints[1].Value
+            end
+        end
+    end
+    return nil
+end
+
+local function startNpcEspLoop()
+    task.spawn(function()
+        print("[ESP Debug] Entities Loop Started. Scanning ENTITY_CONTAINER...")
+        while npcEspActive do
+            local currentActiveNpcs = {}
+            local entityContainer = Workspace:FindFirstChild("ENTITY_CONTAINER")
+            
+            if entityContainer then
+                local children = entityContainer:GetChildren()
+                for i = 1, #children do
+                    local entityFolder = children[i]
+                    if not npcEspActive then break end
+                    
+                    local matchedName = nil
+                    local healthBar = entityFolder:FindFirstChild("HealthBar")
+                    if healthBar then
+                        local nameLabel = healthBar:FindFirstChild("EntityNameLabel")
+                        if nameLabel and nameLabel:IsA("TextLabel") then
+                            local textValue = string.lower(tostring(nameLabel.Text))
+                            local contentTextValue = string.lower(tostring(nameLabel.ContentText))
+                            local localizedTextValue = string.lower(tostring(nameLabel.LocalizedText))
+                            
+                            if validEntities[textValue] then matchedName = textValue
+                            elseif validEntities[contentTextValue] then matchedName = contentTextValue
+                            elseif validEntities[localizedTextValue] then matchedName = localizedTextValue
+                            end
+                        end
+                    end
+
+                    if matchedName then
+                        currentActiveNpcs[entityFolder] = true
+                        
+                        -- Priority 1: Try reading Color from ParticleEmitter (like smoke, frost particles, etc.)
+                        local espColor = getParticleEmitterColor(entityFolder)
+                        
+                        -- Priority 2: Fallbacks & manual overrides based on type/name if no particle color exists
+                        if not espColor then
+                            local lowerFolderString = string.lower(entityFolder.Name .. tostring(entityFolder:GetFullName()))
+                            
+                            if matchedName == "bandit" then
+                                espColor = Color3.fromRGB(255, 40, 40) -- Bright Red for Bandits
+                            elseif matchedName == "shark" then
+                                espColor = Color3.fromRGB(0, 255, 255) -- Cyan Blue for Sharks
+                            elseif matchedName == "vampire" or string.find(lowerFolderString, "vampire") then
+                                espColor = Color3.fromRGB(170, 0, 255) -- Purple for Vampire
+                            elseif string.find(lowerFolderString, "radioactive") or string.find(lowerFolderString, "acidcough") then
+                                espColor = Color3.fromRGB(40, 255, 40) -- Green
+                            elseif string.find(lowerFolderString, "flame") then
+                                espColor = Color3.fromRGB(255, 140, 0) -- Orange Sun
+                            elseif string.find(lowerFolderString, "stalker") or string.find(lowerFolderString, "frost") or string.find(lowerFolderString, "parasitic") then
+                                espColor = Color3.fromRGB(170, 0, 255) -- Purple
+                            else
+                                espColor = Color3.fromRGB(100, 110, 60) -- Default Brown-Green for normal zombies
+                            end
+                        end
+
+                        if not npcESPTracked[entityFolder] then
+                            print(string.format("[SUCCESS] Found Entity [%s]! Applying Highlight to: %s", matchedName, entityFolder.Name))
+                            local highlight = Instance.new("Highlight")
+                            highlight.Name = "EntityCustomESP"
+                            highlight.Adornee = entityFolder
+                            highlight.FillColor = espColor
+                            highlight.FillTransparency = 0.4
+                            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                            highlight.OutlineTransparency = 0
+                            highlight.Parent = entityFolder
+                            npcESPTracked[entityFolder] = highlight
+                        else
+                            npcESPTracked[entityFolder].FillColor = espColor
+                        end
+                    end
+                end
+            end
+
+            -- Clean up targets that disappeared
+            for targetObj, highlight in pairs(npcESPTracked) do
+                if not currentActiveNpcs[targetObj] or not targetObj.Parent then
+                    if highlight then highlight:Destroy() end
+                    npcESPTracked[targetObj] = nil
+                end
+            end
+
+            task.wait(0.5)
+        end
+        removeNpcESP()
+    end)
+end
+
+local function toggleNpcEsp()
+    npcEspActive = not npcEspActive
+    if npcEspActive then
+        npcEspBtn.Text = "Entities ESP [F4]: ON"
+        npcEspBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+        npcEspBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        startNpcEspLoop()
+    else
+        npcEspBtn.Text = "Entities ESP [F4]: OFF"
+        npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        removeNpcESP()
+    end
+end
+npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
+
+-- Keybind Listener
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.F1 then
+        toggleTeleport()
+    elseif input.KeyCode == Enum.KeyCode.F3 then
+        toggleAutoPickup()
+    elseif input.KeyCode == Enum.KeyCode.F4 then
+        toggleNpcEsp()
     end
 end)
 
 exitButton.MouseButton1Click:Connect(function()
     autoPickupActive = false
-    removeAllESPColors()
+    npcEspActive = false
+    removeNpcESP()
     screenGui:Destroy()
 end)
