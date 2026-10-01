@@ -174,7 +174,7 @@ local function buildCategoryCaches()
         return ReplicatedStorage.Assets.Mutual.Item.Category
     end)
     if not success or not categoriesFolder then return end
-    local targetCategories = {"Weapon", "Valuable", "Medic", "Armor", "Ammo", "Food", "Resources", "Junk", "Junks"}
+    local targetCategories = {"Weapon", "Valuable", "Medic", "Armor", "Ammo", "Food", "Resources", "Junk", "Fuel"}
     for _, catName in ipairs(targetCategories) do
         local catFolder = categoriesFolder:FindFirstChild(catName)
         if catFolder then
