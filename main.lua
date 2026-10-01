@@ -203,7 +203,7 @@ local function isAllowedCategoryItem(itemFolder)
     return false
 end
 
--- Continuous Auto PickUp Loop (100 Studs Range)
+-- Ultra-Fast Auto PickUp Loop
 local autoPickupActive = false
 local processedItems = {}
 
@@ -212,8 +212,6 @@ local function startAutoPickupLoop()
         buildCategoryCaches()
         local replicaInsertRE = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("ReplicaRemoteEvents") and ReplicatedStorage.ClientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayInsert")
         local equipItemRF = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("Mutual") and ReplicatedStorage.ClientSource.Mutual:FindFirstChild("Packages") and ReplicatedStorage.ClientSource.Mutual.Packages:FindFirstChild("Knit") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit:FindFirstChild("Services") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services:FindFirstChild("ItemService") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService:FindFirstChild("RF") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService.RF:FindFirstChild("EquipItem")
-
-        local cacheTimer = 0
 
         while autoPickupActive do
             local char = player.Character
@@ -240,13 +238,11 @@ local function startAutoPickupLoop()
                 end
             end
 
-            cacheTimer = cacheTimer + 0.1
-            if cacheTimer >= 2 then
-                cacheTimer = 0
-                table.clear(processedItems)
-            end
-
-            task.wait(0.2)
+            -- Clears cache frequently so newly dropped/spawned items are picked up instantly
+            table.clear(processedItems)
+            
+            -- Reduced delay to run almost every frame/step for maximum speed
+            task.wait(0.03)
         end
     end)
 end
@@ -293,7 +289,6 @@ local function removeNpcESP()
     table.clear(npcESPTracked)
 end
 
--- Function to extract color from ParticleEmitter if present
 local function getParticleEmitterColor(entityFolder)
     for _, desc in ipairs(entityFolder:GetDescendants()) do
         if desc:IsA("ParticleEmitter") then
@@ -308,7 +303,6 @@ end
 
 local function startNpcEspLoop()
     task.spawn(function()
-        print("[ESP Debug] Entities Loop Started. Scanning ENTITY_CONTAINER...")
         while npcEspActive do
             local currentActiveNpcs = {}
             local entityContainer = Workspace:FindFirstChild("ENTITY_CONTAINER")
@@ -337,33 +331,29 @@ local function startNpcEspLoop()
 
                     if matchedName then
                         currentActiveNpcs[entityFolder] = true
-                        
-                        -- Priority 1: Try reading Color from ParticleEmitter (like smoke, frost particles, etc.)
                         local espColor = getParticleEmitterColor(entityFolder)
                         
-                        -- Priority 2: Fallbacks & manual overrides based on type/name if no particle color exists
                         if not espColor then
                             local lowerFolderString = string.lower(entityFolder.Name .. tostring(entityFolder:GetFullName()))
                             
                             if matchedName == "bandit" then
-                                espColor = Color3.fromRGB(255, 40, 40) -- Bright Red for Bandits
+                                espColor = Color3.fromRGB(255, 40, 40)
                             elseif matchedName == "shark" then
-                                espColor = Color3.fromRGB(0, 255, 255) -- Cyan Blue for Sharks
+                                espColor = Color3.fromRGB(0, 255, 255)
                             elseif matchedName == "vampire" or string.find(lowerFolderString, "vampire") then
-                                espColor = Color3.fromRGB(170, 0, 255) -- Purple for Vampire
+                                espColor = Color3.fromRGB(170, 0, 255)
                             elseif string.find(lowerFolderString, "radioactive") or string.find(lowerFolderString, "acidcough") then
-                                espColor = Color3.fromRGB(40, 255, 40) -- Green
+                                espColor = Color3.fromRGB(40, 255, 40)
                             elseif string.find(lowerFolderString, "flame") then
-                                espColor = Color3.fromRGB(255, 140, 0) -- Orange Sun
+                                espColor = Color3.fromRGB(255, 140, 0)
                             elseif string.find(lowerFolderString, "stalker") or string.find(lowerFolderString, "frost") or string.find(lowerFolderString, "parasitic") then
-                                espColor = Color3.fromRGB(170, 0, 255) -- Purple
+                                espColor = Color3.fromRGB(170, 0, 255)
                             else
-                                espColor = Color3.fromRGB(100, 110, 60) -- Default Brown-Green for normal zombies
+                                espColor = Color3.fromRGB(100, 110, 60)
                             end
                         end
 
                         if not npcESPTracked[entityFolder] then
-                            print(string.format("[SUCCESS] Found Entity [%s]! Applying Highlight to: %s", matchedName, entityFolder.Name))
                             local highlight = Instance.new("Highlight")
                             highlight.Name = "EntityCustomESP"
                             highlight.Adornee = entityFolder
@@ -380,7 +370,6 @@ local function startNpcEspLoop()
                 end
             end
 
-            -- Clean up targets that disappeared
             for targetObj, highlight in pairs(npcESPTracked) do
                 if not currentActiveNpcs[targetObj] or not targetObj.Parent then
                     if highlight then highlight:Destroy() end
