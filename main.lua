@@ -163,47 +163,58 @@ local function toggleTeleport()
 end
 tpButton.MouseButton1Click:Connect(toggleTeleport)
 
--- Item Caching categories
-local allowedTemplateNames = {}
-local allowedMeshIds = {}
+-- Priority-based Category Caching
+local prioritizedCategories = {"Valuable", "Resources", "Fuel", "Junk", "Junks", "Weapon", "Medic", "Armor", "Ammo", "Food"}
+local categoryMaps = {}
 
 local function buildCategoryCaches()
-    allowedTemplateNames = {}
-    allowedMeshIds = {}
+    categoryMaps = {}
     local success, categoriesFolder = pcall(function()
         return ReplicatedStorage.Assets.Mutual.Item.Category
     end)
     if not success or not categoriesFolder then return end
-    local targetCategories = {"Weapon", "Valuable", "Medic", "Armor", "Ammo", "Food", "Resources", "Junk", "Fuel"}
-    for _, catName in ipairs(targetCategories) do
+
+    for _, catName in ipairs(prioritizedCategories) do
         local catFolder = categoriesFolder:FindFirstChild(catName)
         if catFolder then
+            local templateNames = {}
+            local meshIds = {}
             for _, itemTemplate in ipairs(catFolder:GetChildren()) do
-                allowedTemplateNames[string.lower(itemTemplate.Name)] = true
+                templateNames[string.lower(itemTemplate.Name)] = true
                 for _, desc in ipairs(itemTemplate:GetDescendants()) do
                     if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and desc.MeshId ~= "" then
-                        allowedMeshIds[desc.MeshId] = true
+                        meshIds[desc.MeshId] = true
                     end
+                end
+            end
+            categoryMaps[catName] = {names = templateNames, meshes = meshIds}
+        end
+    end
+end
+
+local function getItemCategory(itemFolder)
+    if not next(categoryMaps) then
+        buildCategoryCaches()
+    end
+
+    local itemName = string.lower(itemFolder.Name)
+    for _, catName in ipairs(prioritizedCategories) do
+        local data = categoryMaps[catName]
+        if data then
+            if data.names[itemName] then
+                return catName
+            end
+            for _, desc in ipairs(itemFolder:GetDescendants()) do
+                if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and data.meshes[desc.MeshId] then
+                    return catName
                 end
             end
         end
     end
+    return nil
 end
 
-local function isAllowedCategoryItem(itemFolder)
-    if not next(allowedTemplateNames) and not next(allowedMeshIds) then
-        buildCategoryCaches()
-    end
-    if allowedTemplateNames[string.lower(itemFolder.Name)] then return true end
-    for _, desc in ipairs(itemFolder:GetDescendants()) do
-        if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and allowedMeshIds[desc.MeshId] then
-            return true
-        end
-    end
-    return false
-end
-
--- Ultra-Fast Auto PickUp Loop
+-- Ultra-Fast Prioritized Auto PickUp Loop (100 Studs Range)
 local autoPickupActive = false
 local processedItems = {}
 
@@ -220,28 +231,43 @@ local function startAutoPickupLoop()
                 local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
                 if itemContainer then
                     local children = itemContainer:GetChildren()
+                    
+                    local sortedItems = {}
                     for i = 1, #children do
                         local itemFolder = children[i]
-                        if not autoPickupActive then break end 
-                        
-                        if not processedItems[itemFolder] and isAllowedCategoryItem(itemFolder) then
-                            local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
-                            if targetPart and targetPart:IsA("BasePart") then
-                                if (root.Position - targetPart.Position).Magnitude <= 1000 then
-                                    processedItems[itemFolder] = true
-                                    if replicaInsertRE then task.spawn(function() replicaInsertRE:FireServer(itemFolder) end) end
-                                    if equipItemRF then task.spawn(function() equipItemRF:InvokeServer(itemFolder) end) end
+                        if not processedItems[itemFolder] then
+                            local cat = getItemCategory(itemFolder)
+                            if cat then
+                                local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
+                                if targetPart and targetPart:IsA("BasePart") then
+                                    if (root.Position - targetPart.Position).Magnitude <= 100 then
+                                        table.insert(sortedItems, {folder = itemFolder, part = targetPart, cat = cat})
+                                    end
                                 end
                             end
                         end
                     end
+
+                    table.sort(sortedItems, function(a, b)
+                        local priorityA, priorityB = 99, 99
+                        for idx, cName in ipairs(prioritizedCategories) do
+                            if a.cat == cName then priorityA = idx end
+                            if b.cat == cName then priorityB = idx end
+                        end
+                        return priorityA < priorityB
+                    end)
+
+                    for _, data in ipairs(sortedItems) do
+                        if not autoPickupActive then break end
+                        local itemFolder = data.folder
+                        processedItems[itemFolder] = true
+                        if replicaInsertRE then task.spawn(function() replicaInsertRE:FireServer(itemFolder) end) end
+                        if equipItemRF then task.spawn(function() equipItemRF:InvokeServer(itemFolder) end) end
+                    end
                 end
             end
 
-            -- Clears cache frequently so newly dropped/spawned items are picked up instantly
             table.clear(processedItems)
-            
-            -- Reduced delay to run almost every frame/step for maximum speed
             task.wait(0.03)
         end
     end)
