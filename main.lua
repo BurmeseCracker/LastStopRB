@@ -19,12 +19,12 @@ screenGui.DisplayOrder = 999999999
 screenGui.Parent = parentContainer
 
 --------------------------------------------------------------------------------
--- MAIN MENU FRAME
+-- MAIN MENU FRAME (Expanded for new toggle)
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 220, 0, 260)
-mainFrame.Position = UDim2.new(0.35, -110, 0.5, -130)
+mainFrame.Size = UDim2.new(0, 220, 0, 310)
+mainFrame.Position = UDim2.new(0.35, -110, 0.5, -155)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -90,7 +90,7 @@ exitCorner.Parent = exitButton
 local tpButton = Instance.new("TextButton")
 tpButton.Name = "TpButton"
 tpButton.Size = UDim2.new(0.9, 0, 0, 35)
-tpButton.Position = UDim2.new(0.05, 0, 0.16, 0)
+tpButton.Position = UDim2.new(0.05, 0, 0.13, 0)
 tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 tpButton.Text = "Teleport to Bus [F1]: OFF"
 tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -106,7 +106,7 @@ tpCorner.Parent = tpButton
 local autoPickupBtn = Instance.new("TextButton")
 autoPickupBtn.Name = "AutoPickupBtn"
 autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 35)
-autoPickupBtn.Position = UDim2.new(0.05, 0, 0.38, 0)
+autoPickupBtn.Position = UDim2.new(0.05, 0, 0.31, 0)
 autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
 autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -122,7 +122,7 @@ pickupCorner.Parent = autoPickupBtn
 local npcEspBtn = Instance.new("TextButton")
 npcEspBtn.Name = "NpcEspBtn"
 npcEspBtn.Size = UDim2.new(0.9, 0, 0, 35)
-npcEspBtn.Position = UDim2.new(0.05, 0, 0.60, 0)
+npcEspBtn.Position = UDim2.new(0.05, 0, 0.49, 0)
 npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 npcEspBtn.Text = "Entities ESP [F4]: OFF"
 npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -133,6 +133,22 @@ npcEspBtn.Parent = mainFrame
 local npcCorner = Instance.new("UICorner")
 npcCorner.CornerRadius = UDim.new(0, 6)
 npcCorner.Parent = npcEspBtn
+
+-- Toggle 4: Tp Back Bandit [F5]
+local tpBackBanditBtn = Instance.new("TextButton")
+tpBackBanditBtn.Name = "TpBackBanditBtn"
+tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 35)
+tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.67, 0)
+tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+tpBackBanditBtn.Text = "Tp Back Bandit [F5]: OFF"
+tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+tpBackBanditBtn.TextSize = 12
+tpBackBanditBtn.Font = Enum.Font.SourceSansBold
+tpBackBanditBtn.Parent = mainFrame
+
+local tpBackCorner = Instance.new("UICorner")
+tpBackCorner.CornerRadius = UDim.new(0, 6)
+tpBackCorner.Parent = tpBackBanditBtn
 
 --------------------------------------------------------------------------------
 -- LOGIC & SYSTEMS
@@ -304,15 +320,22 @@ local validEntities = {
     ["zombie"] = true,
 }
 
--- Entities ESP System with ParticleEmitter Color Auto-Detection
-local npcEspActive = false
-local npcESPTracked = {}
-
-local function removeNpcESP()
-    for _, highlight in pairs(npcESPTracked) do
-        if highlight then highlight:Destroy() end
+local function getEntityMatchedName(entityFolder)
+    local healthBar = entityFolder:FindFirstChild("HealthBar")
+    if healthBar then
+        local nameLabel = healthBar:FindFirstChild("EntityNameLabel")
+        if nameLabel and nameLabel:IsA("TextLabel") then
+            local textValue = string.lower(tostring(nameLabel.Text))
+            local contentTextValue = string.lower(tostring(nameLabel.ContentText))
+            local localizedTextValue = string.lower(tostring(nameLabel.LocalizedText))
+            
+            if validEntities[textValue] then return textValue
+            elseif validEntities[contentTextValue] then return contentTextValue
+            elseif validEntities[localizedTextValue] then return localizedTextValue
+            end
+        end
     end
-    table.clear(npcESPTracked)
+    return nil
 end
 
 local function getParticleEmitterColor(entityFolder)
@@ -327,6 +350,17 @@ local function getParticleEmitterColor(entityFolder)
     return nil
 end
 
+-- Entities ESP System
+local npcEspActive = false
+local npcESPTracked = {}
+
+local function removeNpcESP()
+    for _, highlight in pairs(npcESPTracked) do
+        if highlight then highlight:Destroy() end
+    end
+    table.clear(npcESPTracked)
+end
+
 local function startNpcEspLoop()
     task.spawn(function()
         while npcEspActive do
@@ -339,21 +373,7 @@ local function startNpcEspLoop()
                     local entityFolder = children[i]
                     if not npcEspActive then break end
                     
-                    local matchedName = nil
-                    local healthBar = entityFolder:FindFirstChild("HealthBar")
-                    if healthBar then
-                        local nameLabel = healthBar:FindFirstChild("EntityNameLabel")
-                        if nameLabel and nameLabel:IsA("TextLabel") then
-                            local textValue = string.lower(tostring(nameLabel.Text))
-                            local contentTextValue = string.lower(tostring(nameLabel.ContentText))
-                            local localizedTextValue = string.lower(tostring(nameLabel.LocalizedText))
-                            
-                            if validEntities[textValue] then matchedName = textValue
-                            elseif validEntities[contentTextValue] then matchedName = contentTextValue
-                            elseif validEntities[localizedTextValue] then matchedName = localizedTextValue
-                            end
-                        end
-                    end
+                    local matchedName = getEntityMatchedName(entityFolder)
 
                     if matchedName then
                         currentActiveNpcs[entityFolder] = true
@@ -425,6 +445,61 @@ local function toggleNpcEsp()
 end
 npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
 
+-- Teleport Back Bandit System [F5]
+local tpBackBanditActive = false
+
+local function startTpBackBanditLoop()
+    task.spawn(function()
+        while tpBackBanditActive do
+            local char = player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            local entityContainer = Workspace:FindFirstChild("ENTITY_CONTAINER")
+
+            if root and entityContainer then
+                local nearestBanditPart = nil
+                local shortestDist = math.huge
+
+                for _, entityFolder in ipairs(entityContainer:GetChildren()) do
+                    local matchedName = getEntityMatchedName(entityFolder)
+                    if matchedName == "bandit" then
+                        local humanoid = entityFolder:FindFirstChildOfClass("Humanoid")
+                        local targetPart = entityFolder:FindFirstChild("HumanoidRootPart") or entityFolder:FindFirstChild("Torso")
+                        if humanoid and targetPart and humanoid.Health > 0 then
+                            local dist = (root.Position - targetPart.Position).Magnitude
+                            if dist < shortestDist then
+                                shortestDist = dist
+                                nearestBanditPart = targetPart
+                            end
+                        end
+                    end
+                end
+
+                if nearestBanditPart then
+                    -- Teleport behind the bandit (3 studs behind along their look vector)
+                    root.AssemblyLinearVelocity = Vector3.zero
+                    root.CFrame = nearestBanditPart.CFrame * CFrame.new(0, -3, 0)
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end
+
+local function toggleTpBackBandit()
+    tpBackBanditActive = not tpBackBanditActive
+    if tpBackBanditActive then
+        tpBackBanditBtn.Text = "Tp Back Bandit [F5]: ON"
+        tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+        tpBackBanditBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        startTpBackBanditLoop()
+    else
+        tpBackBanditBtn.Text = "Tp Back Bandit [F5]: OFF"
+        tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    end
+end
+tpBackBanditBtn.MouseButton1Click:Connect(toggleTpBackBandit)
+
 -- Keybind Listener
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
@@ -434,12 +509,15 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         toggleAutoPickup()
     elseif input.KeyCode == Enum.KeyCode.F4 then
         toggleNpcEsp()
+    elseif input.KeyCode == Enum.KeyCode.F5 then
+        toggleTpBackBandit()
     end
 end)
 
 exitButton.MouseButton1Click:Connect(function()
     autoPickupActive = false
     npcEspActive = false
+    tpBackBanditActive = false
     removeNpcESP()
     screenGui:Destroy()
 end)
