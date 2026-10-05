@@ -23,8 +23,8 @@ screenGui.Parent = parentContainer
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 220, 0, 355)
-mainFrame.Position = UDim2.new(0.35, -110, 0.5, -177)
+mainFrame.Size = UDim2.new(0, 220, 0, 400)
+mainFrame.Position = UDim2.new(0.35, -110, 0.5, -200)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -34,7 +34,6 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 8)
 corner.Parent = mainFrame
 
--- Simple Drag Function
 local function enableDrag(frame)
     local dragging, dragInput, dragStart, startPos
     frame.InputBegan:Connect(function(input)
@@ -42,7 +41,7 @@ local function enableDrag(frame)
             dragging = true
             dragStart = input.Position
             startPos = frame.Position
-                    input.Changed:Connect(function()
+            input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then dragging = false end
             end)
         end
@@ -51,7 +50,7 @@ local function enableDrag(frame)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
     end)
     UserInputService.InputChanged:Connect(function(input)
-if input == dragInput and dragging then
+        if input == dragInput and dragging then
             local delta = input.Position - dragStart
             frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
@@ -86,88 +85,75 @@ local exitCorner = Instance.new("UICorner")
 exitCorner.CornerRadius = UDim.new(0, 4)
 exitCorner.Parent = exitButton
 
--- Toggle 1: Teleport to Bus [F1]
+-- UI Buttons
 local tpButton = Instance.new("TextButton")
-tpButton.Name = "TpButton"
-tpButton.Size = UDim2.new(0.9, 0, 0, 32)
-tpButton.Position = UDim2.new(0.05, 0, 0.11, 0)
+tpButton.Size = UDim2.new(0.9, 0, 0, 30)
+tpButton.Position = UDim2.new(0.05, 0, 0.10, 0)
 tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 tpButton.Text = "Teleport to Bus [F1]: OFF"
 tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
 tpButton.TextSize = 12
 tpButton.Font = Enum.Font.SourceSansBold
 tpButton.Parent = mainFrame
+Instance.new("UICorner", tpButton).CornerRadius = UDim.new(0, 6)
 
-local tpCorner = Instance.new("UICorner")
-tpCorner.CornerRadius = UDim.new(0, 6)
-tpCorner.Parent = tpButton
-
--- Toggle 2: Auto PickUP [F3]
 local autoPickupBtn = Instance.new("TextButton")
-autoPickupBtn.Name = "AutoPickupBtn"
-autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 32)
-autoPickupBtn.Position = UDim2.new(0.05, 0, 0.27, 0)
+autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 30)
+autoPickupBtn.Position = UDim2.new(0.05, 0, 0.24, 0)
 autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
 autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 autoPickupBtn.TextSize = 12
 autoPickupBtn.Font = Enum.Font.SourceSansBold
 autoPickupBtn.Parent = mainFrame
+Instance.new("UICorner", autoPickupBtn).CornerRadius = UDim.new(0, 6)
 
-local pickupCorner = Instance.new("UICorner")
-pickupCorner.CornerRadius = UDim.new(0, 6)
-pickupCorner.Parent = autoPickupBtn
-
--- Toggle 3: Entities ESP [F4]
 local npcEspBtn = Instance.new("TextButton")
-npcEspBtn.Name = "NpcEspBtn"
-npcEspBtn.Size = UDim2.new(0.9, 0, 0, 32)
-npcEspBtn.Position = UDim2.new(0.05, 0, 0.43, 0)
+npcEspBtn.Size = UDim2.new(0.9, 0, 0, 30)
+npcEspBtn.Position = UDim2.new(0.05, 0, 0.38, 0)
 npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 npcEspBtn.Text = "Entities ESP [F4]: OFF"
 npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 npcEspBtn.TextSize = 12
 npcEspBtn.Font = Enum.Font.SourceSansBold
 npcEspBtn.Parent = mainFrame
+Instance.new("UICorner", npcEspBtn).CornerRadius = UDim.new(0, 6)
 
-local npcCorner = Instance.new("UICorner")
-npcCorner.CornerRadius = UDim.new(0, 6)
-npcCorner.Parent = npcEspBtn
-
--- Toggle 4: Tp Back Bandit [F5]
 local tpBackBanditBtn = Instance.new("TextButton")
-tpBackBanditBtn.Name = "TpBackBanditBtn"
-tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 32)
-tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.59, 0)
+tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 30)
+tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.52, 0)
 tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 tpBackBanditBtn.Text = "Tp Back Bandit [F5]: OFF"
 tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 tpBackBanditBtn.TextSize = 12
 tpBackBanditBtn.Font = Enum.Font.SourceSansBold
 tpBackBanditBtn.Parent = mainFrame
+Instance.new("UICorner", tpBackBanditBtn).CornerRadius = UDim.new(0, 6)
 
-local tpBackCorner = Instance.new("UICorner")
-tpBackCorner.CornerRadius = UDim.new(0, 6)
-tpBackCorner.Parent = tpBackBanditBtn
-
--- Button 5: Chest Store [F6]
 local chestStoreBtn = Instance.new("TextButton")
-chestStoreBtn.Name = "ChestStoreBtn"
-chestStoreBtn.Size = UDim2.new(0.9, 0, 0, 32)
-chestStoreBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
+chestStoreBtn.Size = UDim2.new(0.9, 0, 0, 30)
+chestStoreBtn.Position = UDim2.new(0.05, 0, 0.66, 0)
 chestStoreBtn.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
 chestStoreBtn.Text = "Chest Store [F6]"
 chestStoreBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 chestStoreBtn.TextSize = 12
 chestStoreBtn.Font = Enum.Font.SourceSansBold
 chestStoreBtn.Parent = mainFrame
+Instance.new("UICorner", chestStoreBtn).CornerRadius = UDim.new(0, 6)
 
-local chestStoreCorner = Instance.new("UICorner")
-chestStoreCorner.CornerRadius = UDim.new(0, 6)
-chestStoreCorner.Parent = chestStoreBtn
+local autoStoreBtn = Instance.new("TextButton")
+autoStoreBtn.Size = UDim2.new(0.9, 0, 0, 30)
+autoStoreBtn.Position = UDim2.new(0.05, 0, 0.80, 0)
+autoStoreBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+autoStoreBtn.Text = "Auto Store [F7]: OFF"
+autoStoreBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+autoStoreBtn.TextSize = 12
+autoStoreBtn.Font = Enum.Font.SourceSansBold
+autoStoreBtn.Parent = mainFrame
+Instance.new("UICorner", autoStoreBtn).CornerRadius = UDim.new(0, 6)
 
 --------------------------------------------------------------------------------
--- LOGIC & SYSTEMS
+-- SHARED UTILITIES (Bus checking)
 --------------------------------------------------------------------------------
 local function getBusBase()
     return Workspace:FindFirstChild("ITEM_CONTAINER")
@@ -184,253 +170,9 @@ local function teleportToBus()
     end
 end
 
-local tpToggle = false
-local function toggleTeleport()
-    tpToggle = not tpToggle
-    if tpToggle then
-        tpButton.Text = "Teleport to Bus [F1]: ON"
-        tpButton.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
-        tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        teleportToBus()
-    else
-        tpButton.Text = "Teleport to Bus [F1]: OFF"
-        tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-        tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-    end
-end
-tpButton.MouseButton1Click:Connect(toggleTeleport)
-
--- Priority-based Category Caching
-local prioritizedCategories = {"Valuable", "Resources", "Fuel", "Junk", "Weapon", "Medic", "Armor", "Ammo", "Food"}
-local categoryMaps = {}
-
-local function buildCategoryCaches()
-    categoryMaps = {}
-    local success, categoriesFolder = pcall(function()
-        return ReplicatedStorage.Assets.Mutual.Item.Category
-    end)
-    if not success or not categoriesFolder then return end
-
-    for _, catName in ipairs(prioritizedCategories) do
-        local catFolder = categoriesFolder:FindFirstChild(catName)
-        if catFolder then
-            local templateNames = {}
-            local meshIds = {}
-            for _, itemTemplate in ipairs(catFolder:GetChildren()) do
-                templateNames[string.lower(itemTemplate.Name)] = true
-                for _, desc in ipairs(itemTemplate:GetDescendants()) do
-                    if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and desc.MeshId ~= "" then
-                        meshIds[desc.MeshId] = true
-                    end
-                end
-            end
-            categoryMaps[catName] = {names = templateNames, meshes = meshIds}
-        end
-    end
-end
-
-local function getItemCategory(itemFolder)
-    if not next(categoryMaps) then
-        buildCategoryCaches()
-    end
-
-    local itemName = string.lower(itemFolder.Name)
-    for _, catName in ipairs(prioritizedCategories) do
-        local data = categoryMaps[catName]
-        if data then
-            if data.names[itemName] then
-                return catName
-            end
-            for _, desc in ipairs(itemFolder:GetDescendants()) do
-                if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and data.meshes[desc.MeshId] then
-                    return catName
-                end
-            end
-        end
-    end
-    return nil
-end
-
-local function isInsideTargetChunk(itemPos)
-    local chunksContainer = Workspace:FindFirstChild("CHUNKS_CONTAINER")
-    if not chunksContainer then return true end
-
-    local subAreaNames = {"PathPoints", "Area", "LootSpawnAreas", "SpawnAreas"}
-    local maxDist = 80
-    
-    -- Dynamically iterate through all chunks and their child nodes without hardcoding session UUIDs
-    for _, chunkFolder in ipairs(chunksContainer:GetChildren()) do
-        for _, chunkNode in ipairs(chunkFolder:GetChildren()) do
-            for _, name in ipairs(subAreaNames) do
-                local subFolder = chunkNode:FindFirstChild(name)
-                if subFolder then
-                    for _, desc in ipairs(subFolder:GetDescendants()) do
-                        if desc:IsA("BasePart") then
-                            local dist = (itemPos - desc.Position).Magnitude
-                            local boxSize = math.max(desc.Size.X, desc.Size.Y, desc.Size.Z) + maxDist
-                            if dist <= boxSize then
-                                return true
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    return true
-end
-
--- Global Session Blacklist Tracking
-local autoPickupActive = false
-local permanentlyIgnoredItems = {}
-
-local function startAutoPickupLoop()
-    task.spawn(function()
-        buildCategoryCaches()
-        local replicaInsertRE = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("ReplicaRemoteEvents") and ReplicatedStorage.ClientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayInsert")
-        local itemServiceRF = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("Mutual") and ReplicatedStorage.ClientSource.Mutual:FindFirstChild("Packages") and ReplicatedStorage.ClientSource.Mutual.Packages:FindFirstChild("Knit") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit:FindFirstChild("Services") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services:FindFirstChild("ItemService") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService:FindFirstChild("RF")
-        local equipItemRF = itemServiceRF and itemServiceRF:FindFirstChild("EquipItem")
-
-        while autoPickupActive do
-            local char = player.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local root = char.HumanoidRootPart
-                local busBase = getBusBase()
-                local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
-                
-                if itemContainer then
-                    local children = itemContainer:GetChildren()
-                    local sortedItems = {}
-                    
-                    for i = 1, #children do
-                        local itemFolder = children[i]
-                        if itemFolder:FindFirstChild("Chest") or itemFolder.Name == "Chest" then
-                            permanentlyIgnoredItems[itemFolder] = true
-                        end
-
-                        if not permanentlyIgnoredItems[itemFolder] then
-                            local cat = getItemCategory(itemFolder)
-                            if cat then
-                                local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
-                                if targetPart and targetPart:IsA("BasePart") then
-                                    local skipItem = false
-                                    
-                                    if busBase then
-                                        if (targetPart.Position - busBase.Position).Magnitude <= 20 then
-                                            skipItem = true
-                                            permanentlyIgnoredItems[itemFolder] = true
-                                        end
-                                    end
-                                    
-                                    if not skipItem then
-                                        if not isInsideTargetChunk(targetPart.Position) then
-                                            skipItem = true
-                                            permanentlyIgnoredItems[itemFolder] = true
-                                        end
-                                    end
-                                    
-                                    if not skipItem then
-                                        table.insert(sortedItems, {folder = itemFolder, part = targetPart, cat = cat})
-                                    end
-                                end
-                            end
-                        end
-                    end
-
-                    table.sort(sortedItems, function(a, b)
-                        local priorityA, priorityB = 99, 99
-                        for idx, cName in ipairs(prioritizedCategories) do
-                            if a.cat == cName then priorityA = idx end
-                            if b.cat == cName then priorityB = idx end
-                        end
-                        return priorityA < priorityB
-                    end)
-
-                    for _, data in ipairs(sortedItems) do
-                        if not autoPickupActive then break end
-                        local itemFolder = data.folder
-                        local targetPart = data.part
-                        
-                        permanentlyIgnoredItems[itemFolder] = true
-
-                        root.AssemblyLinearVelocity = Vector3.zero
-                        root.CFrame = targetPart.CFrame * CFrame.new(0, 2, 0)
-                        task.wait(1)
-
-                        if replicaInsertRE then task.spawn(function() replicaInsertRE:FireServer(itemFolder) end) end
-                        if equipItemRF then task.spawn(function() equipItemRF:InvokeServer(itemFolder) end) end
-                    end
-                end
-            end
-
-            teleportToBus()
-            task.wait(2.5)
-        end
-    end)
-end
-
-local function toggleAutoPickup()
-    autoPickupActive = not autoPickupActive
-    if autoPickupActive then
-        autoPickupBtn.Text = "Auto PickUP [F3]: ON"
-        autoPickupBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
-        autoPickupBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        startAutoPickupLoop()
-    else
-        autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
-        autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-        autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    end
-end
-autoPickupBtn.MouseButton1Click:Connect(toggleAutoPickup)
-
--- Chest Store using ItemService & Replica RemoteEvents
-local function runChestStore()
-    local success, itemServiceStoreRF = pcall(function()
-        return ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService.RF.StoreItem
-    end)
-
-    local replicaInsertRE = ReplicatedStorage:FindFirstChild("ClientSource") 
-        and ReplicatedStorage.ClientSource:FindFirstChild("ReplicaRemoteEvents") 
-        and ReplicatedStorage.ClientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayInsert")
-
-    local replicaRemoveRE = ReplicatedStorage:FindFirstChild("ClientSource") 
-        and ReplicatedStorage.ClientSource:FindFirstChild("ReplicaRemoteEvents") 
-        and ReplicatedStorage.ClientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayRemove")
-
-    local targetChest = nil
-    local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
-    if itemContainer then
-        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        local shortest = math.huge
-        for _, child in ipairs(itemContainer:GetChildren()) do
-            local chestPart = child:FindFirstChild("Chest") or (child.Name == "Chest" and child)
-            if chestPart and root then
-                local dist = (root.Position - chestPart.Position).Magnitude
-                if dist < shortest then
-                    shortest = dist
-                    targetChest = child
-                end
-            end
-        end
-    end
-
-    if success and itemServiceStoreRF and targetChest then
-        pcall(function()
-            if replicaInsertRE then replicaInsertRE:FireServer(targetChest) end
-            if replicaRemoveRE then replicaRemoveRE:FireServer(targetChest) end
-            itemServiceStoreRF:InvokeServer(targetChest)
-        end)
-        print("Chest Store executed via ItemService & Replica events for:", targetChest.Name)
-    else
-        warn("Could not find ItemService.RF.StoreItem, replica events, or a nearby chest container.")
-    end
-end
-
-chestStoreBtn.MouseButton1Click:Connect(runChestStore)
-
--- Allowed Entity Names List
+--------------------------------------------------------------------------------
+-- ENTITY UTILITIES (ESP & Teleport Back Bandit helpers)
+--------------------------------------------------------------------------------
 local validEntities = {
     ["bandit"] = true,
     ["alien"] = true,
@@ -475,7 +217,290 @@ local function getParticleEmitterColor(entityFolder)
     return nil
 end
 
--- Entities ESP System
+--------------------------------------------------------------------------------
+-- SEPARATED SYSTEM 1: AUTO PICKUP MODULE
+--------------------------------------------------------------------------------
+local AutoPickupModule = {}
+AutoPickupModule.Active = false
+AutoPickupModule.PermanentlyIgnored = {}
+AutoPickupModule.PrioritizedCategories = {"Valuable", "Resources", "Fuel", "Junk", "Weapon", "Medic", "Armor", "Ammo", "Food"}
+AutoPickupModule.CategoryMaps = {}
+
+function AutoPickupModule.BuildCaches()
+    AutoPickupModule.CategoryMaps = {}
+    local success, categoriesFolder = pcall(function()
+        return ReplicatedStorage.Assets.Mutual.Item.Category
+    end)
+    if not success or not categoriesFolder then return end
+
+    for _, catName in ipairs(AutoPickupModule.PrioritizedCategories) do
+        local catFolder = categoriesFolder:FindFirstChild(catName)
+        if catFolder then
+            local templateNames = {}
+            local meshIds = {}
+            for _, itemTemplate in ipairs(catFolder:GetChildren()) do
+                templateNames[string.lower(itemTemplate.Name)] = true
+                for _, desc in ipairs(itemTemplate:GetDescendants()) do
+                    if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and desc.MeshId ~= "" then
+                        meshIds[desc.MeshId] = true
+                    end
+                end
+            end
+            AutoPickupModule.CategoryMaps[catName] = {names = templateNames, meshes = meshIds}
+        end
+    end
+end
+
+function AutoPickupModule.GetCategory(itemFolder)
+    if not next(AutoPickupModule.CategoryMaps) then
+        AutoPickupModule.BuildCaches()
+    end
+
+    local itemName = string.lower(itemFolder.Name)
+    for _, catName in ipairs(AutoPickupModule.PrioritizedCategories) do
+        local data = AutoPickupModule.CategoryMaps[catName]
+        if data then
+            if data.names[itemName] then return catName end
+            for _, desc in ipairs(itemFolder:GetDescendants()) do
+                if (desc:IsA("MeshPart") or desc:IsA("SpecialMesh")) and desc.MeshId and data.meshes[desc.MeshId] then
+                    return catName
+                end
+            end
+        end
+    end
+    return nil
+end
+
+function AutoPickupModule.IsInsideChunk(itemPos)
+    local chunksContainer = Workspace:FindFirstChild("CHUNKS_CONTAINER")
+    if not chunksContainer then return true end
+
+    local subAreaNames = {"PathPoints", "Area", "LootSpawnAreas", "SpawnAreas"}
+    local maxDist = 80
+    
+    for _, chunkFolder in ipairs(chunksContainer:GetChildren()) do
+        for _, chunkNode in ipairs(chunkFolder:GetChildren()) do
+            for _, name in ipairs(subAreaNames) do
+                local subFolder = chunkNode:FindFirstChild(name)
+                if subFolder then
+                    for _, desc in ipairs(subFolder:GetDescendants()) do
+                        if desc:IsA("BasePart") then
+                            local dist = (itemPos - desc.Position).Magnitude
+                            local boxSize = math.max(desc.Size.X, desc.Size.Y, desc.Size.Z) + maxDist
+                            if dist <= boxSize then return true end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return true
+end
+
+-- Checks if an item position is within 100 studs of ANY SellArea across all chunks
+local function isNearAnySellArea(itemPos)
+    local chunksContainer = Workspace:FindFirstChild("CHUNKS_CONTAINER")
+    if not chunksContainer then return false end
+
+    for _, chunk in ipairs(chunksContainer:GetChildren()) do
+        for _, descendant in ipairs(chunk:GetDescendants()) do
+            if descendant.Name == "SellArea" and descendant:IsA("BasePart") then
+                if (itemPos - descendant.Position).Magnitude <= 100 then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+function AutoPickupModule.Start()
+    if AutoPickupModule.Active then return end
+    AutoPickupModule.Active = true
+    
+    autoPickupBtn.Text = "Auto PickUP [F3]: ON"
+    autoPickupBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+    autoPickupBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+    task.spawn(function()
+        AutoPickupModule.BuildCaches()
+        local replicaInsertRE = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("ReplicaRemoteEvents") and ReplicatedStorage.ClientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayInsert")
+        local itemServiceRF = ReplicatedStorage:FindFirstChild("ClientSource") and ReplicatedStorage.ClientSource:FindFirstChild("Mutual") and ReplicatedStorage.ClientSource.Mutual:FindFirstChild("Packages") and ReplicatedStorage.ClientSource.Mutual.Packages:FindFirstChild("Knit") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit:FindFirstChild("Services") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services:FindFirstChild("ItemService") and ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService:FindFirstChild("RF")
+        local equipItemRF = itemServiceRF and itemServiceRF:FindFirstChild("EquipItem")
+
+        while AutoPickupModule.Active do
+            local char = player.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local root = char.HumanoidRootPart
+                local busBase = getBusBase()
+                local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
+                
+                if itemContainer then
+                    local children = itemContainer:GetChildren()
+                    local sortedItems = {}
+                    
+                    for i = 1, #children do
+                        local itemFolder = children[i]
+                        
+                        if not AutoPickupModule.PermanentlyIgnored[itemFolder] then
+                            local cat = AutoPickupModule.GetCategory(itemFolder)
+                            if cat then
+                                local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
+                                if targetPart and targetPart:IsA("BasePart") then
+                                    local skipItem = false
+                                    
+                                    -- Check if item is near bus
+                                    if busBase and (targetPart.Position - busBase.Position).Magnitude <= 20 then
+                                        skipItem = true
+                                        AutoPickupModule.PermanentlyIgnored[itemFolder] = true
+                                    end
+                                    
+                                    -- Check if item is near ANY SellArea within 100 studs
+                                    if not skipItem and isNearAnySellArea(targetPart.Position) then
+                                        skipItem = true
+                                        AutoPickupModule.PermanentlyIgnored[itemFolder] = true
+                                    end
+                                    
+                                    if not skipItem and not AutoPickupModule.IsInsideChunk(targetPart.Position) then
+                                        skipItem = true
+                                        AutoPickupModule.PermanentlyIgnored[itemFolder] = true
+                                    end
+                                    
+                                    if not skipItem then
+                                        table.insert(sortedItems, {folder = itemFolder, part = targetPart, cat = cat})
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    table.sort(sortedItems, function(a, b)
+                        local priorityA, priorityB = 99, 99
+                        for idx, cName in ipairs(AutoPickupModule.PrioritizedCategories) do
+                            if a.cat == cName then priorityA = idx end
+                            if b.cat == cName then priorityB = idx end
+                        end
+                        return priorityA < priorityB
+                    end)
+
+                    for _, data in ipairs(sortedItems) do
+                        if not AutoPickupModule.Active then break end
+                        AutoPickupModule.PermanentlyIgnored[data.folder] = true
+
+                        root.AssemblyLinearVelocity = Vector3.zero
+                        root.CFrame = data.part.CFrame * CFrame.new(0, 2, 0)
+                        task.wait(1)
+
+                        if replicaInsertRE then task.spawn(function() replicaInsertRE:FireServer(data.folder) end) end
+                        if equipItemRF then task.spawn(function() equipItemRF:InvokeServer(data.folder) end) end
+                    end
+                end
+            end
+
+            teleportToBus()
+            task.wait(2.5)
+        end
+    end)
+end
+
+function AutoPickupModule.Stop()
+    AutoPickupModule.Active = false
+    autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
+    autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+end
+
+autoPickupBtn.MouseButton1Click:Connect(function()
+    if AutoPickupModule.Active then AutoPickupModule.Stop() else AutoPickupModule.Start() end
+end)
+
+
+--------------------------------------------------------------------------------
+-- SEPARATED SYSTEM 2: AUTO STORE MODULE
+--------------------------------------------------------------------------------
+local InventoryController = {
+    AutoStoreRunning = false,
+    AutoStoreSlots = {},
+    Grid = nil,
+}
+
+local StoreItemRemote = ReplicatedStorage:WaitForChild("ClientSource")
+    :WaitForChild("Mutual")
+    :WaitForChild("Packages")
+    :WaitForChild("Knit")
+    :WaitForChild("Services")
+    :WaitForChild("ItemService")
+    :WaitForChild("RF")
+    :WaitForChild("StoreItem")
+
+local function UpdateAutoStoreUI()
+    if InventoryController.AutoStoreRunning then
+        autoStoreBtn.Text = "Auto Store [F7]: ON"
+        autoStoreBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+        autoStoreBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    else
+        autoStoreBtn.Text = "Auto Store [F7]: OFF"
+        autoStoreBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        autoStoreBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    end
+end
+
+function InventoryController.StartAutoStore()
+    if InventoryController.AutoStoreRunning then return end
+    InventoryController.AutoStoreRunning = true
+    UpdateAutoStoreUI()
+
+    task.spawn(function()
+        while InventoryController.AutoStoreRunning do
+            local targetSlot = nil
+            if InventoryController.Grid and InventoryController.Grid.GetSlots then
+                InventoryController.AutoStoreSlots = InventoryController.Grid:GetSlots()
+            end
+
+            for _, slot in ipairs(InventoryController.AutoStoreSlots) do
+                if not InventoryController.AutoStoreRunning then break end
+                if slot and slot:GetAttribute("HasItem") then
+                    targetSlot = slot
+                    break
+                end
+            end
+
+            if not targetSlot then
+                InventoryController.StopAutoStore()
+                break
+            end
+
+            local itemUUID = targetSlot:GetAttribute("ItemUUID") or targetSlot.Name
+            local success, response = pcall(function()
+                return StoreItemRemote:InvokeServer(itemUUID)
+            end)
+
+            if success and response then
+                targetSlot:SetAttribute("HasItem", false)
+            else
+                task.wait(1)
+            end
+
+            task.wait(0.3)
+        end
+        InventoryController.AutoStoreRunning = false
+        UpdateAutoStoreUI()
+    end)
+end
+
+function InventoryController.StopAutoStore()
+    InventoryController.AutoStoreRunning = false
+    UpdateAutoStoreUI()
+end
+
+autoStoreBtn.MouseButton1Click:Connect(function()
+    if InventoryController.AutoStoreRunning then InventoryController.StopAutoStore() else InventoryController.StartAutoStore() end
+end)
+
+
+--------------------------------------------------------------------------------
+-- ENTITIES ESP SYSTEM [F4]
+--------------------------------------------------------------------------------
 local npcEspActive = false
 local npcESPTracked = {}
 
@@ -570,7 +595,10 @@ local function toggleNpcEsp()
 end
 npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
 
--- Teleport Back Bandit System [F5]
+
+--------------------------------------------------------------------------------
+-- TELEPORT BACK BANDIT SYSTEM [F5]
+--------------------------------------------------------------------------------
 local tpBackBanditActive = false
 
 local function toggleTpBackBandit()
@@ -618,26 +646,74 @@ local function toggleTpBackBandit()
 end
 tpBackBanditBtn.MouseButton1Click:Connect(toggleTpBackBandit)
 
--- Keybind Listener
+
+--------------------------------------------------------------------------------
+-- OTHER FEATURES (Teleport, Chest Store, Hotkeys)
+--------------------------------------------------------------------------------
+local tpToggle = false
+tpButton.MouseButton1Click:Connect(function()
+    tpToggle = not tpToggle
+    if tpToggle then
+        tpButton.Text = "Teleport to Bus [F1]: ON"
+        tpButton.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+        tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        teleportToBus()
+    else
+        tpButton.Text = "Teleport to Bus [F1]: OFF"
+        tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    end
+end)
+
+local function runChestStore()
+    local success, itemServiceStoreRF = pcall(function()
+        return ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService.RF.StoreItem
+    end)
+    local targetChest = nil
+    local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
+    if itemContainer then
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        local shortest = math.huge
+        for _, child in ipairs(itemContainer:GetChildren()) do
+            local chestPart = child:FindFirstChild("Chest") or (child.Name == "Chest" and child)
+            if chestPart and root then
+                local dist = (root.Position - chestPart.Position).Magnitude
+                if dist < shortest then shortest = dist targetChest = child end
+            end
+        end
+    end
+    if success and itemServiceStoreRF and targetChest then
+        pcall(function() itemServiceStoreRF:InvokeServer(targetChest) end)
+    end
+end
+chestStoreBtn.MouseButton1Click:Connect(runChestStore)
+
+-- Hotkey Listeners
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.F1 then
-        toggleTeleport()
+        tpButton.MouseButton1Click:Fire()
     elseif input.KeyCode == Enum.KeyCode.F3 then
-        toggleAutoPickup()
+        if AutoPickupModule.Active then AutoPickupModule.Stop() else AutoPickupModule.Start() end
     elseif input.KeyCode == Enum.KeyCode.F4 then
         toggleNpcEsp()
     elseif input.KeyCode == Enum.KeyCode.F5 then
         toggleTpBackBandit()
     elseif input.KeyCode == Enum.KeyCode.F6 then
         runChestStore()
+    elseif input.KeyCode == Enum.KeyCode.F7 then
+        local isCtrlPressed = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
+        if isCtrlPressed then
+            InventoryController.StopAutoStore()
+        else
+            if InventoryController.AutoStoreRunning then InventoryController.StopAutoStore() else InventoryController.StartAutoStore() end
+        end
     end
 end)
 
 exitButton.MouseButton1Click:Connect(function()
-    autoPickupActive = false
-    npcEspActive = false
-    tpBackBanditActive = false
-    removeNpcESP()
+    AutoPickupModule.Stop()
+    InventoryController.StopAutoStore()
+    if npcEspActive then toggleNpcEsp() end
     screenGui:Destroy()
 end)
