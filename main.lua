@@ -25,7 +25,7 @@ screenGui.Parent = parentContainer
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 220, 0, 360) -- Extended slightly to fit new button
+mainFrame.Size = UDim2.new(0, 220, 0, 360)
 mainFrame.Position = UDim2.new(0.35, -110, 0.5, -180)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
@@ -65,7 +65,7 @@ titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(0.8, 0, 0, 30)
 titleLabel.Position = UDim2.new(0.05, 0, 0, 5)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Last Stop v1 + AutoHit"
+titleLabel.Text = "Last Stop v1 + AutoHit (Fast)"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 14
 titleLabel.Font = Enum.Font.SourceSansBold
@@ -136,7 +136,6 @@ tpBackBanditBtn.Font = Enum.Font.SourceSansBold
 tpBackBanditBtn.Parent = mainFrame
 Instance.new("UICorner", tpBackBanditBtn).CornerRadius = UDim.new(0, 6)
 
--- New Auto Hit Button
 local autoHitBtn = Instance.new("TextButton")
 autoHitBtn.Size = UDim2.new(0.9, 0, 0, 30)
 autoHitBtn.Position = UDim2.new(0.05, 0, 0.84, 0)
@@ -299,7 +298,6 @@ function AutoPickupModule.IsInsideChunk(itemPos)
             end
         end
     end
-    
     return true
 end
 
@@ -393,14 +391,14 @@ function AutoPickupModule.Start()
 
                         root.AssemblyLinearVelocity = Vector3.zero
                         root.CFrame = data.part.CFrame * CFrame.new(0, 2, 0)
-                        task.wait(1)
+                        task.wait(0.5)
 
                         if replicaInsertRE then task.spawn(function() replicaInsertRE:FireServer(data.folder) end) end
                         if equipItemRF then task.spawn(function() equipItemRF:InvokeServer(data.folder) end) end
                     end
                 end
             end
-            task.wait(2.5)
+            task.wait(1)
         end
     end)
 end
@@ -564,13 +562,14 @@ end
 tpBackBanditBtn.MouseButton1Click:Connect(toggleTpBackBandit)
 
 --------------------------------------------------------------------------------
--- AUTO HIT SYSTEM [F6]
+-- AUTO HIT SYSTEM [F6] (With Custom Remotes Integrated)
 --------------------------------------------------------------------------------
 local clientSource = ReplicatedStorage:FindFirstChild("ClientSource")
 local replicaSignal = clientSource 
     and clientSource:FindFirstChild("ReplicaRemoteEvents") 
     and clientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaSignal")
 
+-- User provided remotes integrated here safely
 local remotes = {
     replicaSignal,
     clientSource and clientSource.Mutual.Packages.Knit.Services.BindService.RE.BindGroupCreated,
@@ -587,18 +586,20 @@ local remotes = {
 
 local autoHitEnabled = false
 local attackOrderTicker = 1
+local lastHitTick = 0
 
 local function findNearbyTarget(character)
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return nil end
     
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and obj ~= character then
+    local entityContainer = Workspace:FindFirstChild("ENTITY_CONTAINER")
+    if entityContainer then
+        for _, obj in ipairs(entityContainer:GetChildren()) do
             local humanoid = obj:FindFirstChildOfClass("Humanoid")
             local targetRoot = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
             if humanoid and humanoid.Health > 0 and targetRoot then
                 local distance = (targetRoot.Position - rootPart.Position).Magnitude
-                if distance <= 15 then
+                if distance <= 18 then
                     return targetRoot
                 end
             end
@@ -623,33 +624,36 @@ end
 autoHitBtn.MouseButton1Click:Connect(toggleAutoHit)
 
 RunService.Heartbeat:Connect(function()
-    if autoHitEnabled and (tick() - lastHitTick >= 0.25) then
+    if autoHitEnabled and (tick() - lastHitTick >= 0.1) then
         lastHitTick = tick()
         
         local character = player.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
             local lookVector = CurrentCamera.CFrame.LookVector
+            local targetPart = findNearbyTarget(character)
+            local hitPos = targetPart and targetPart.Position or (character.HumanoidRootPart.Position + (lookVector * 5))
+            local hitTarget = targetPart or character.HumanoidRootPart
             
-            -- Fire Melee & Hit Network Signals
-            if replicaSignal then
-                task.spawn(function()
-                    pcall(function()
-                        replicaSignal:FireServer("Melee", "Attack", lookVector, attackOrderTicker)
-                        
-                        local targetPart = findNearbyTarget(character)
-                        if targetPart then
-                            replicaSignal:FireServer("Melee", "Hit", targetPart, targetPart.Position, Vector3.new(0, 1, 0), Enum.Material.SmoothPlastic)
-                        else
-                            local hitPos = character.HumanoidRootPart.Position + (lookVector * 5)
-                            replicaSignal:FireServer("Melee", "Hit", character.HumanoidRootPart, hitPos, Vector3.new(0, 1, 0), Enum.Material.SmoothPlastic)
+            task.spawn(function()
+                pcall(function()
+                    -- Fire all specified remotes safely if they exist
+                    for _, remote in ipairs(remotes) do
+                        if remote then
+                            pcall(function()
+                                if remote:IsA("RemoteEvent") then
+                                    remote:FireServer("Melee", "Attack", lookVector, attackOrderTicker)
+                                    remote:FireServer("Melee", "Hit", hitTarget, hitPos, Vector3.new(0, 1, 0), Enum.Material.SmoothPlastic)
+                                elseif remote:IsA("RemoteFunction") then
+                                    remote:InvokeServer("Melee", "Attack", lookVector, attackOrderTicker)
+                                end
+                            end)
                         end
+                    end
 
-                        attackOrderTicker = (attackOrderTicker % 3) + 1
-                    end)
+                    attackOrderTicker = (attackOrderTicker % 3) + 1
                 end)
-            end
+            end)
 
-            -- mouse1click() execution inside Auto Hit loop
             pcall(function()
                 if mouse1click then
                     mouse1click()
