@@ -3,6 +3,8 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local CurrentCamera = Workspace.CurrentCamera
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -23,8 +25,8 @@ screenGui.Parent = parentContainer
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 220, 0, 320)
-mainFrame.Position = UDim2.new(0.35, -110, 0.5, -160)
+mainFrame.Size = UDim2.new(0, 220, 0, 360) -- Extended slightly to fit new button
+mainFrame.Position = UDim2.new(0.35, -110, 0.5, -180)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -63,7 +65,7 @@ titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(0.8, 0, 0, 30)
 titleLabel.Position = UDim2.new(0.05, 0, 0, 5)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Last Stop v1"
+titleLabel.Text = "Last Stop v1 + AutoHit"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 14
 titleLabel.Font = Enum.Font.SourceSansBold
@@ -85,10 +87,14 @@ local exitCorner = Instance.new("UICorner")
 exitCorner.CornerRadius = UDim.new(0, 4)
 exitCorner.Parent = exitButton
 
+exitButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
 -- UI Buttons
 local tpButton = Instance.new("TextButton")
 tpButton.Size = UDim2.new(0.9, 0, 0, 30)
-tpButton.Position = UDim2.new(0.05, 0, 0.15, 0)
+tpButton.Position = UDim2.new(0.05, 0, 0.12, 0)
 tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 tpButton.Text = "Teleport to Bus [F1]: OFF"
 tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -99,7 +105,7 @@ Instance.new("UICorner", tpButton).CornerRadius = UDim.new(0, 6)
 
 local autoPickupBtn = Instance.new("TextButton")
 autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 30)
-autoPickupBtn.Position = UDim2.new(0.05, 0, 0.35, 0)
+autoPickupBtn.Position = UDim2.new(0.05, 0, 0.30, 0)
 autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
 autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -110,7 +116,7 @@ Instance.new("UICorner", autoPickupBtn).CornerRadius = UDim.new(0, 6)
 
 local npcEspBtn = Instance.new("TextButton")
 npcEspBtn.Size = UDim2.new(0.9, 0, 0, 30)
-npcEspBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
+npcEspBtn.Position = UDim2.new(0.05, 0, 0.48, 0)
 npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 npcEspBtn.Text = "Entities ESP [F4]: OFF"
 npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -121,7 +127,7 @@ Instance.new("UICorner", npcEspBtn).CornerRadius = UDim.new(0, 6)
 
 local tpBackBanditBtn = Instance.new("TextButton")
 tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 30)
-tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
+tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.66, 0)
 tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 tpBackBanditBtn.Text = "Tp Back Bandit [F5]: OFF"
 tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -129,6 +135,18 @@ tpBackBanditBtn.TextSize = 12
 tpBackBanditBtn.Font = Enum.Font.SourceSansBold
 tpBackBanditBtn.Parent = mainFrame
 Instance.new("UICorner", tpBackBanditBtn).CornerRadius = UDim.new(0, 6)
+
+-- New Auto Hit Button
+local autoHitBtn = Instance.new("TextButton")
+autoHitBtn.Size = UDim2.new(0.9, 0, 0, 30)
+autoHitBtn.Position = UDim2.new(0.05, 0, 0.84, 0)
+autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+autoHitBtn.Text = "Auto Hit [F6]: OFF"
+autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+autoHitBtn.TextSize = 12
+autoHitBtn.Font = Enum.Font.SourceSansBold
+autoHitBtn.Parent = mainFrame
+Instance.new("UICorner", autoHitBtn).CornerRadius = UDim.new(0, 6)
 
 --------------------------------------------------------------------------------
 -- SHARED UTILITIES (Bus checking)
@@ -208,7 +226,6 @@ AutoPickupModule.PermanentlyIgnored = {}
 AutoPickupModule.PrioritizedCategories = {"Valuable", "Resources", "Fuel", "Junk", "Weapon", "Medic", "Armor", "Ammo", "Food"}
 AutoPickupModule.CategoryMaps = {}
 
--- Specific items to ignore entirely (case-insensitive)
 local ignoredItemNames = {
     ["candle"] = true,
     ["empty can"] = true,
@@ -331,7 +348,6 @@ function AutoPickupModule.Start()
                         local itemFolder = children[i]
                         local itemNameLower = string.lower(itemFolder.Name)
                         
-                        -- Skip ignored items (Candle, Empty Can, etc.) and permanently ignored items
                         if not ignoredItemNames[itemNameLower] and not AutoPickupModule.PermanentlyIgnored[itemFolder] then
                             local cat = AutoPickupModule.GetCategory(itemFolder)
                             if cat then
@@ -384,8 +400,6 @@ function AutoPickupModule.Start()
                     end
                 end
             end
-
-            -- Loop delay without spamming teleport back to bus
             task.wait(2.5)
         end
     end)
@@ -397,7 +411,7 @@ function AutoPickupModule.Stop()
     autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
     
-    teleportToBus() -- Return back to bus when turned off
+    teleportToBus()
 end
 
 autoPickupBtn.MouseButton1Click:Connect(function()
@@ -545,30 +559,138 @@ local function toggleTpBackBandit()
         tpBackBanditBtn.Text = "Tp Back Bandit [F5]: OFF"
         tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-        
-        teleportToBus()
     end
 end
 tpBackBanditBtn.MouseButton1Click:Connect(toggleTpBackBandit)
 
 --------------------------------------------------------------------------------
--- HOTKEY LISTENERS & EXIT BUTTON
+-- AUTO HIT SYSTEM [F6]
 --------------------------------------------------------------------------------
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.F1 then
-        tpButton.MouseButton1Click:Fire()
-    elseif input.KeyCode == Enum.KeyCode.F3 then
-        if AutoPickupModule.Active then AutoPickupModule.Stop() else AutoPickupModule.Start() end
-    elseif input.KeyCode == Enum.KeyCode.F4 then
-        toggleNpcEsp()
-    elseif input.KeyCode == Enum.KeyCode.F5 then
-        toggleTpBackBandit()
+local clientSource = ReplicatedStorage:FindFirstChild("ClientSource")
+local replicaSignal = clientSource 
+    and clientSource:FindFirstChild("ReplicaRemoteEvents") 
+    and clientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaSignal")
+
+local remotes = {
+    replicaSignal,
+    clientSource and clientSource.Mutual.Packages.Knit.Services.BindService.RE.BindGroupCreated,
+    clientSource and clientSource.Mutual.Packages.Knit.Services.BindService.RE.BindGroupUpdated,
+    clientSource and clientSource.Mutual.Packages.Knit.Services.BindService.RE.ItemBound,
+    clientSource and clientSource.Mutual.Packages.Knit.Services.DamageService.RE.DamageDealt,
+    clientSource and clientSource.Mutual.Packages.Knit.Services.EffectService.RE.Play,
+    clientSource and clientSource.Mutual.Packages.Knit.Services.ItemService.RE.Initialized,
+    clientSource and clientSource.Mutual.Packages.Knit.Services.ItemService.RF.EquipItem,
+    clientSource and clientSource.Mutual.Packages.Knit.Services.ItemService.RF.ToggleEquip,
+    clientSource and clientSource.Mutual.Packages.Knit.Services.MethodService.RE.MethodCalled,
+    clientSource and clientSource.RedEvent
+}
+
+local autoHitEnabled = false
+local attackOrderTicker = 1
+
+local function findNearbyTarget(character)
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return nil end
+    
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj ~= character then
+            local humanoid = obj:FindFirstChildOfClass("Humanoid")
+            local targetRoot = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
+            if humanoid and humanoid.Health > 0 and targetRoot then
+                local distance = (targetRoot.Position - rootPart.Position).Magnitude
+                if distance <= 15 then
+                    return targetRoot
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function toggleAutoHit()
+    autoHitEnabled = not autoHitEnabled
+    if autoHitEnabled then
+        autoHitBtn.Text = "Auto Hit [F6]: ON"
+        autoHitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+        autoHitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    else
+        autoHitBtn.Text = "Auto Hit [F6]: OFF"
+        autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    end
+end
+
+autoHitBtn.MouseButton1Click:Connect(toggleAutoHit)
+
+-- Heartbeat Loop for Auto Hit Execution
+local lastHitTick = 0
+RunService.Heartbeat:Connect(function()
+    if autoHitEnabled and (os.clock() - lastHitTick >= 0.25) then
+        lastHitTick = os.clock()
+        
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local lookVector = CurrentCamera.CFrame.LookVector
+            
+            -- Fire background service remotes
+            for _, remote in ipairs(remotes) do
+                if remote then
+                    task.spawn(function()
+                        pcall(function()
+                            if remote:IsA("RemoteEvent") then
+                                remote:FireServer()
+                            elseif remote:IsA("RemoteFunction") then
+                                remote:InvokeServer()
+                            end
+                        end)
+                    end)
+                end
+            end
+
+            -- Fire Melee & Hit Network Signals
+            if replicaSignal then
+                task.spawn(function()
+                    pcall(function()
+                        replicaSignal:FireServer("Melee", "Attack", lookVector, attackOrderTicker)
+                        
+                        local targetPart = findNearbyTarget(character)
+                        if targetPart then
+                            replicaSignal:FireServer("Melee", "Hit", targetPart, targetPart.Position, Vector3.new(0, 1, 0), Enum.Material.SmoothPlastic)
+                        else
+                            local hitPos = character.HumanoidRootPart.Position + (lookVector * 5)
+                            replicaSignal:FireServer("Melee", "Hit", character.HumanoidRootPart, hitPos, Vector3.new(0, 1, 0), Enum.Material.SmoothPlastic)
+                        end
+
+                        attackOrderTicker = (attackOrderTicker % 3) + 1
+                    end)
+                end)
+            end
+
+            -- Executor click support if available
+            pcall(function()
+                if mouse1click then
+                    mouse1click()
+                end
+            end)
+        end
     end
 end)
 
-exitButton.MouseButton1Click:Connect(function()
-    AutoPickupModule.Stop()
-    if npcEspActive then toggleNpcEsp() end
-    screenGui:Destroy()
+--------------------------------------------------------------------------------
+-- GLOBAL KEYBIND LISTENER
+--------------------------------------------------------------------------------
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        if input.KeyCode == Enum.KeyCode.F1 then
+            teleportToBus()
+        elseif input.KeyCode == Enum.KeyCode.F3 then
+            if AutoPickupModule.Active then AutoPickupModule.Stop() else AutoPickupModule.Start() end
+        elseif input.KeyCode == Enum.KeyCode.F4 then
+            toggleNpcEsp()
+        elseif input.KeyCode == Enum.KeyCode.F5 then
+            toggleTpBackBandit()
+        elseif input.KeyCode == Enum.KeyCode.F6 then
+            toggleAutoHit()
+        end
+    end
 end)
