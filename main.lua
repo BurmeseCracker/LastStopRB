@@ -23,8 +23,8 @@ screenGui.Parent = parentContainer
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 220, 0, 400)
-mainFrame.Position = UDim2.new(0.35, -110, 0.5, -200)
+mainFrame.Size = UDim2.new(0, 220, 0, 320)
+mainFrame.Position = UDim2.new(0.35, -110, 0.5, -160)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -88,7 +88,7 @@ exitCorner.Parent = exitButton
 -- UI Buttons
 local tpButton = Instance.new("TextButton")
 tpButton.Size = UDim2.new(0.9, 0, 0, 30)
-tpButton.Position = UDim2.new(0.05, 0, 0.10, 0)
+tpButton.Position = UDim2.new(0.05, 0, 0.15, 0)
 tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 tpButton.Text = "Teleport to Bus [F1]: OFF"
 tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -99,7 +99,7 @@ Instance.new("UICorner", tpButton).CornerRadius = UDim.new(0, 6)
 
 local autoPickupBtn = Instance.new("TextButton")
 autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 30)
-autoPickupBtn.Position = UDim2.new(0.05, 0, 0.24, 0)
+autoPickupBtn.Position = UDim2.new(0.05, 0, 0.35, 0)
 autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
 autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -110,7 +110,7 @@ Instance.new("UICorner", autoPickupBtn).CornerRadius = UDim.new(0, 6)
 
 local npcEspBtn = Instance.new("TextButton")
 npcEspBtn.Size = UDim2.new(0.9, 0, 0, 30)
-npcEspBtn.Position = UDim2.new(0.05, 0, 0.38, 0)
+npcEspBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
 npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 npcEspBtn.Text = "Entities ESP [F4]: OFF"
 npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -121,7 +121,7 @@ Instance.new("UICorner", npcEspBtn).CornerRadius = UDim.new(0, 6)
 
 local tpBackBanditBtn = Instance.new("TextButton")
 tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 30)
-tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.52, 0)
+tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
 tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 tpBackBanditBtn.Text = "Tp Back Bandit [F5]: OFF"
 tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -129,28 +129,6 @@ tpBackBanditBtn.TextSize = 12
 tpBackBanditBtn.Font = Enum.Font.SourceSansBold
 tpBackBanditBtn.Parent = mainFrame
 Instance.new("UICorner", tpBackBanditBtn).CornerRadius = UDim.new(0, 6)
-
-local chestStoreBtn = Instance.new("TextButton")
-chestStoreBtn.Size = UDim2.new(0.9, 0, 0, 30)
-chestStoreBtn.Position = UDim2.new(0.05, 0, 0.66, 0)
-chestStoreBtn.BackgroundColor3 = Color3.fromRGB(60, 40, 120)
-chestStoreBtn.Text = "Chest Store [F6]"
-chestStoreBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-chestStoreBtn.TextSize = 12
-chestStoreBtn.Font = Enum.Font.SourceSansBold
-chestStoreBtn.Parent = mainFrame
-Instance.new("UICorner", chestStoreBtn).CornerRadius = UDim.new(0, 6)
-
-local autoStoreBtn = Instance.new("TextButton")
-autoStoreBtn.Size = UDim2.new(0.9, 0, 0, 30)
-autoStoreBtn.Position = UDim2.new(0.05, 0, 0.80, 0)
-autoStoreBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-autoStoreBtn.Text = "Auto Store [F7]: OFF"
-autoStoreBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-autoStoreBtn.TextSize = 12
-autoStoreBtn.Font = Enum.Font.SourceSansBold
-autoStoreBtn.Parent = mainFrame
-Instance.new("UICorner", autoStoreBtn).CornerRadius = UDim.new(0, 6)
 
 --------------------------------------------------------------------------------
 -- SHARED UTILITIES (Bus checking)
@@ -169,6 +147,10 @@ local function teleportToBus()
         root.CFrame = busBase.CFrame * CFrame.new(0, 6, 0)
     end
 end
+
+tpButton.MouseButton1Click:Connect(function()
+    teleportToBus()
+end)
 
 --------------------------------------------------------------------------------
 -- ENTITY UTILITIES (ESP & Teleport Back Bandit helpers)
@@ -226,6 +208,12 @@ AutoPickupModule.PermanentlyIgnored = {}
 AutoPickupModule.PrioritizedCategories = {"Valuable", "Resources", "Fuel", "Junk", "Weapon", "Medic", "Armor", "Ammo", "Food"}
 AutoPickupModule.CategoryMaps = {}
 
+-- Specific items to ignore entirely (case-insensitive)
+local ignoredItemNames = {
+    ["candle"] = true,
+    ["empty can"] = true,
+}
+
 function AutoPickupModule.BuildCaches()
     AutoPickupModule.CategoryMaps = {}
     local success, categoriesFolder = pcall(function()
@@ -279,25 +267,25 @@ function AutoPickupModule.IsInsideChunk(itemPos)
     local maxDist = 80
     
     for _, chunkFolder in ipairs(chunksContainer:GetChildren()) do
-        for _, chunkNode in ipairs(chunkFolder:GetChildren()) do
-            for _, name in ipairs(subAreaNames) do
-                local subFolder = chunkNode:FindFirstChild(name)
-                if subFolder then
-                    for _, desc in ipairs(subFolder:GetDescendants()) do
-                        if desc:IsA("BasePart") then
-                            local dist = (itemPos - desc.Position).Magnitude
-                            local boxSize = math.max(desc.Size.X, desc.Size.Y, desc.Size.Z) + maxDist
-                            if dist <= boxSize then return true end
+        for _, name in ipairs(subAreaNames) do
+            local subFolder = chunkFolder:FindFirstChild(name)
+            if subFolder then
+                for _, desc in ipairs(subFolder:GetDescendants()) do
+                    if desc:IsA("BasePart") then
+                        local dist = (itemPos - desc.Position).Magnitude
+                        local boxSize = math.max(desc.Size.X, desc.Size.Y, desc.Size.Z) + maxDist
+                        if dist <= boxSize then 
+                            return true 
                         end
                     end
                 end
             end
         end
     end
+    
     return true
 end
 
--- Checks if an item position is within 100 studs of ANY SellArea across all chunks
 local function isNearAnySellArea(itemPos)
     local chunksContainer = Workspace:FindFirstChild("CHUNKS_CONTAINER")
     if not chunksContainer then return false end
@@ -341,21 +329,21 @@ function AutoPickupModule.Start()
                     
                     for i = 1, #children do
                         local itemFolder = children[i]
+                        local itemNameLower = string.lower(itemFolder.Name)
                         
-                        if not AutoPickupModule.PermanentlyIgnored[itemFolder] then
+                        -- Skip ignored items (Candle, Empty Can, etc.) and permanently ignored items
+                        if not ignoredItemNames[itemNameLower] and not AutoPickupModule.PermanentlyIgnored[itemFolder] then
                             local cat = AutoPickupModule.GetCategory(itemFolder)
                             if cat then
                                 local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                                 if targetPart and targetPart:IsA("BasePart") then
                                     local skipItem = false
                                     
-                                    -- Check if item is near bus
                                     if busBase and (targetPart.Position - busBase.Position).Magnitude <= 20 then
                                         skipItem = true
                                         AutoPickupModule.PermanentlyIgnored[itemFolder] = true
                                     end
                                     
-                                    -- Check if item is near ANY SellArea within 100 studs
                                     if not skipItem and isNearAnySellArea(targetPart.Position) then
                                         skipItem = true
                                         AutoPickupModule.PermanentlyIgnored[itemFolder] = true
@@ -397,7 +385,7 @@ function AutoPickupModule.Start()
                 end
             end
 
-            teleportToBus()
+            -- Loop delay without spamming teleport back to bus
             task.wait(2.5)
         end
     end)
@@ -408,98 +396,16 @@ function AutoPickupModule.Stop()
     autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
     autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    
+    teleportToBus() -- Return back to bus when turned off
 end
 
 autoPickupBtn.MouseButton1Click:Connect(function()
     if AutoPickupModule.Active then AutoPickupModule.Stop() else AutoPickupModule.Start() end
 end)
 
-
 --------------------------------------------------------------------------------
--- SEPARATED SYSTEM 2: AUTO STORE MODULE
---------------------------------------------------------------------------------
-local InventoryController = {
-    AutoStoreRunning = false,
-    AutoStoreSlots = {},
-    Grid = nil,
-}
-
-local StoreItemRemote = ReplicatedStorage:WaitForChild("ClientSource")
-    :WaitForChild("Mutual")
-    :WaitForChild("Packages")
-    :WaitForChild("Knit")
-    :WaitForChild("Services")
-    :WaitForChild("ItemService")
-    :WaitForChild("RF")
-    :WaitForChild("StoreItem")
-
-local function UpdateAutoStoreUI()
-    if InventoryController.AutoStoreRunning then
-        autoStoreBtn.Text = "Auto Store [F7]: ON"
-        autoStoreBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
-        autoStoreBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    else
-        autoStoreBtn.Text = "Auto Store [F7]: OFF"
-        autoStoreBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-        autoStoreBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    end
-end
-
-function InventoryController.StartAutoStore()
-    if InventoryController.AutoStoreRunning then return end
-    InventoryController.AutoStoreRunning = true
-    UpdateAutoStoreUI()
-
-    task.spawn(function()
-        while InventoryController.AutoStoreRunning do
-            local targetSlot = nil
-            if InventoryController.Grid and InventoryController.Grid.GetSlots then
-                InventoryController.AutoStoreSlots = InventoryController.Grid:GetSlots()
-            end
-
-            for _, slot in ipairs(InventoryController.AutoStoreSlots) do
-                if not InventoryController.AutoStoreRunning then break end
-                if slot and slot:GetAttribute("HasItem") then
-                    targetSlot = slot
-                    break
-                end
-            end
-
-            if not targetSlot then
-                InventoryController.StopAutoStore()
-                break
-            end
-
-            local itemUUID = targetSlot:GetAttribute("ItemUUID") or targetSlot.Name
-            local success, response = pcall(function()
-                return StoreItemRemote:InvokeServer(itemUUID)
-            end)
-
-            if success and response then
-                targetSlot:SetAttribute("HasItem", false)
-            else
-                task.wait(1)
-            end
-
-            task.wait(0.3)
-        end
-        InventoryController.AutoStoreRunning = false
-        UpdateAutoStoreUI()
-    end)
-end
-
-function InventoryController.StopAutoStore()
-    InventoryController.AutoStoreRunning = false
-    UpdateAutoStoreUI()
-end
-
-autoStoreBtn.MouseButton1Click:Connect(function()
-    if InventoryController.AutoStoreRunning then InventoryController.StopAutoStore() else InventoryController.StartAutoStore() end
-end)
-
-
---------------------------------------------------------------------------------
--- ENTITIES ESP SYSTEM [F4]
+-- ENTITIES ESP MODULE
 --------------------------------------------------------------------------------
 local npcEspActive = false
 local npcESPTracked = {}
@@ -595,7 +501,6 @@ local function toggleNpcEsp()
 end
 npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
 
-
 --------------------------------------------------------------------------------
 -- TELEPORT BACK BANDIT SYSTEM [F5]
 --------------------------------------------------------------------------------
@@ -646,49 +551,9 @@ local function toggleTpBackBandit()
 end
 tpBackBanditBtn.MouseButton1Click:Connect(toggleTpBackBandit)
 
-
 --------------------------------------------------------------------------------
--- OTHER FEATURES (Teleport, Chest Store, Hotkeys)
+-- HOTKEY LISTENERS & EXIT BUTTON
 --------------------------------------------------------------------------------
-local tpToggle = false
-tpButton.MouseButton1Click:Connect(function()
-    tpToggle = not tpToggle
-    if tpToggle then
-        tpButton.Text = "Teleport to Bus [F1]: ON"
-        tpButton.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
-        tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        teleportToBus()
-    else
-        tpButton.Text = "Teleport to Bus [F1]: OFF"
-        tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-        tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-    end
-end)
-
-local function runChestStore()
-    local success, itemServiceStoreRF = pcall(function()
-        return ReplicatedStorage.ClientSource.Mutual.Packages.Knit.Services.ItemService.RF.StoreItem
-    end)
-    local targetChest = nil
-    local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
-    if itemContainer then
-        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        local shortest = math.huge
-        for _, child in ipairs(itemContainer:GetChildren()) do
-            local chestPart = child:FindFirstChild("Chest") or (child.Name == "Chest" and child)
-            if chestPart and root then
-                local dist = (root.Position - chestPart.Position).Magnitude
-                if dist < shortest then shortest = dist targetChest = child end
-            end
-        end
-    end
-    if success and itemServiceStoreRF and targetChest then
-        pcall(function() itemServiceStoreRF:InvokeServer(targetChest) end)
-    end
-end
-chestStoreBtn.MouseButton1Click:Connect(runChestStore)
-
--- Hotkey Listeners
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.F1 then
@@ -699,21 +564,11 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         toggleNpcEsp()
     elseif input.KeyCode == Enum.KeyCode.F5 then
         toggleTpBackBandit()
-    elseif input.KeyCode == Enum.KeyCode.F6 then
-        runChestStore()
-    elseif input.KeyCode == Enum.KeyCode.F7 then
-        local isCtrlPressed = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
-        if isCtrlPressed then
-            InventoryController.StopAutoStore()
-        else
-            if InventoryController.AutoStoreRunning then InventoryController.StopAutoStore() else InventoryController.StartAutoStore() end
-        end
     end
 end)
 
 exitButton.MouseButton1Click:Connect(function()
     AutoPickupModule.Stop()
-    InventoryController.StopAutoStore()
     if npcEspActive then toggleNpcEsp() end
     screenGui:Destroy()
 end)
