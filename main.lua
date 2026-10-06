@@ -140,7 +140,7 @@ local autoHitBtn = Instance.new("TextButton")
 autoHitBtn.Size = UDim2.new(0.9, 0, 0, 30)
 autoHitBtn.Position = UDim2.new(0.05, 0, 0.84, 0)
 autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-autoHitBtn.Text = "Auto Hit [F6]: OFF"
+autoHitBtn.Text = "Auto Hit [F7]: OFF"
 autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 autoHitBtn.TextSize = 12
 autoHitBtn.Font = Enum.Font.SourceSansBold
@@ -611,11 +611,11 @@ end
 local function toggleAutoHit()
     autoHitEnabled = not autoHitEnabled
     if autoHitEnabled then
-        autoHitBtn.Text = "Auto Hit [F6]: ON"
+        autoHitBtn.Text = "Auto Hit [F7]: ON"
         autoHitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
         autoHitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     else
-        autoHitBtn.Text = "Auto Hit [F6]: OFF"
+        autoHitBtn.Text = "Auto Hit [F7]: OFF"
         autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
     end
@@ -676,7 +676,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             toggleNpcEsp()
         elseif input.KeyCode == Enum.KeyCode.F5 then
             toggleTpBackBandit()
-        elseif input.KeyCode == Enum.KeyCode.F6 then
+        elseif input.KeyCode == Enum.KeyCode.F7 then
             toggleAutoHit()
         end
     end
