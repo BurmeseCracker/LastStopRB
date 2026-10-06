@@ -674,10 +674,8 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             if AutoPickupModule.Active then AutoPickupModule.Stop() else AutoPickupModule.Start() end
         elseif input.KeyCode == Enum.KeyCode.F4 then
             toggleNpcEsp()
-        elseif input.KeyCode == Enum.KeyCode.F5 then
-            toggleTpBackBandit()
-        elseif input.KeyCode == Enum.KeyCode.F7 then
-            toggleAutoHit()
+        elseif input.KeyCode == Enum.KeyCode.F5 then -- Changed from F7 to F5 to match your intent
+            toggleAutoHit()                        -- Now toggles Auto Hit on F5!
         end
     end
 end)
