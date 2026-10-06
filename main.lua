@@ -622,31 +622,14 @@ end
 
 autoHitBtn.MouseButton1Click:Connect(toggleAutoHit)
 
--- Heartbeat Loop for Auto Hit Execution
-local lastHitTick = 0
 RunService.Heartbeat:Connect(function()
-    if autoHitEnabled and (os.clock() - lastHitTick >= 0.25) then
-        lastHitTick = os.clock()
+    if autoHitEnabled and (tick() - lastHitTick >= 0.25) then
+        lastHitTick = tick()
         
         local character = player.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
             local lookVector = CurrentCamera.CFrame.LookVector
             
-            -- Fire background service remotes
-            for _, remote in ipairs(remotes) do
-                if remote then
-                    task.spawn(function()
-                        pcall(function()
-                            if remote:IsA("RemoteEvent") then
-                                remote:FireServer()
-                            elseif remote:IsA("RemoteFunction") then
-                                remote:InvokeServer()
-                            end
-                        end)
-                    end)
-                end
-            end
-
             -- Fire Melee & Hit Network Signals
             if replicaSignal then
                 task.spawn(function()
@@ -666,7 +649,7 @@ RunService.Heartbeat:Connect(function()
                 end)
             end
 
-            -- Executor click support if available
+            -- mouse1click() execution inside Auto Hit loop
             pcall(function()
                 if mouse1click then
                     mouse1click()
