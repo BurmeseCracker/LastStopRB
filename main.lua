@@ -129,7 +129,7 @@ local tpBackBanditBtn = Instance.new("TextButton")
 tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 30)
 tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.66, 0)
 tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-tpBackBanditBtn.Text = "Tp Back Bandit [F5]: OFF"
+tpBackBanditBtn.Text = "Tp to Bandit [F5]"
 tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 tpBackBanditBtn.TextSize = 12
 tpBackBanditBtn.Font = Enum.Font.SourceSansBold
@@ -140,7 +140,7 @@ local autoHitBtn = Instance.new("TextButton")
 autoHitBtn.Size = UDim2.new(0.9, 0, 0, 30)
 autoHitBtn.Position = UDim2.new(0.05, 0, 0.84, 0)
 autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-autoHitBtn.Text = "Auto Hit [F7]: OFF"
+autoHitBtn.Text = "Auto Hit [F6]: OFF"
 autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 autoHitBtn.TextSize = 12
 autoHitBtn.Font = Enum.Font.SourceSansBold
@@ -170,7 +170,7 @@ tpButton.MouseButton1Click:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- ENTITY UTILITIES (ESP & Teleport Back Bandit helpers)
+-- ENTITY UTILITIES (ESP & Teleport To Bandit helpers)
 --------------------------------------------------------------------------------
 local validEntities = {
     ["bandit"] = true,
@@ -224,11 +224,6 @@ AutoPickupModule.Active = false
 AutoPickupModule.PermanentlyIgnored = {}
 AutoPickupModule.PrioritizedCategories = {"Valuable", "Resources", "Fuel", "Junk", "Weapon", "Medic", "Armor", "Ammo", "Food"}
 AutoPickupModule.CategoryMaps = {}
-
-local ignoredItemNames = {
-    ["candle"] = true,
-    ["empty can"] = true,
-}
 
 function AutoPickupModule.BuildCaches()
     AutoPickupModule.CategoryMaps = {}
@@ -362,11 +357,7 @@ function AutoPickupModule.Start()
                                         skipItem = true
                                         AutoPickupModule.PermanentlyIgnored[itemFolder] = true
                                     end
-                                    
-                                    if not skipItem and not AutoPickupModule.IsInsideChunk(targetPart.Position) then
-                                        skipItem = true
-                                        AutoPickupModule.PermanentlyIgnored[itemFolder] = true
-                                    end
+                        
                                     
                                     if not skipItem then
                                         table.insert(sortedItems, {folder = itemFolder, part = targetPart, cat = cat})
@@ -514,52 +505,40 @@ end
 npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
 
 --------------------------------------------------------------------------------
--- TELEPORT BACK BANDIT SYSTEM [F5]
+-- TELEPORT TO BANDIT SYSTEM [F5]
 --------------------------------------------------------------------------------
-local tpBackBanditActive = false
+local function teleportToBandit()
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local entityContainer = Workspace:FindFirstChild("ENTITY_CONTAINER")
 
-local function toggleTpBackBandit()
-    tpBackBanditActive = not tpBackBanditActive
-    if tpBackBanditActive then
-        tpBackBanditBtn.Text = "Tp Back Bandit [F5]: ON"
-        tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
-        tpBackBanditBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        
-        local char = player.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        local entityContainer = Workspace:FindFirstChild("ENTITY_CONTAINER")
+    if root and entityContainer then
+        local nearestBanditPart = nil
+        local shortestDist = math.huge
 
-        if root and entityContainer then
-            local nearestBanditPart = nil
-            local shortestDist = math.huge
-
-            for _, entityFolder in ipairs(entityContainer:GetChildren()) do
-                local matchedName = getEntityMatchedName(entityFolder)
-                if matchedName == "bandit" then
-                    local humanoid = entityFolder:FindFirstChildOfClass("Humanoid")
-                    local targetPart = entityFolder:FindFirstChild("HumanoidRootPart") or entityFolder:FindFirstChild("Torso")
-                    if humanoid and targetPart and humanoid.Health > 0 then
-                        local dist = (root.Position - targetPart.Position).Magnitude
-                        if dist < shortestDist then
-                            shortestDist = dist
-                            nearestBanditPart = targetPart
-                        end
+        for _, entityFolder in ipairs(entityContainer:GetChildren()) do
+            local matchedName = getEntityMatchedName(entityFolder)
+            if matchedName == "bandit" then
+                local humanoid = entityFolder:FindFirstChildOfClass("Humanoid")
+                local targetPart = entityFolder:FindFirstChild("HumanoidRootPart") or entityFolder:FindFirstChild("Torso")
+                if humanoid and targetPart and humanoid.Health > 0 then
+                    local dist = (root.Position - targetPart.Position).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        nearestBanditPart = targetPart
                     end
                 end
             end
-
-            if nearestBanditPart then
-                root.AssemblyLinearVelocity = Vector3.zero
-                root.CFrame = nearestBanditPart.CFrame * CFrame.new(0, -3, 0)
-            end
         end
-    else
-        tpBackBanditBtn.Text = "Tp Back Bandit [F5]: OFF"
-        tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-        tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+
+        if nearestBanditPart then
+            root.AssemblyLinearVelocity = Vector3.zero
+            root.CFrame = nearestBanditPart.CFrame * CFrame.new(0, -3, 0)
+        end
     end
 end
-tpBackBanditBtn.MouseButton1Click:Connect(toggleTpBackBandit)
+
+tpBackBanditBtn.MouseButton1Click:Connect(teleportToBandit)
 
 --------------------------------------------------------------------------------
 -- AUTO HIT SYSTEM [F6] (With Custom Remotes Integrated)
@@ -569,7 +548,6 @@ local replicaSignal = clientSource
     and clientSource:FindFirstChild("ReplicaRemoteEvents") 
     and clientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaSignal")
 
--- User provided remotes integrated here safely
 local remotes = {
     replicaSignal,
     clientSource and clientSource.Mutual.Packages.Knit.Services.BindService.RE.BindGroupCreated,
@@ -611,11 +589,11 @@ end
 local function toggleAutoHit()
     autoHitEnabled = not autoHitEnabled
     if autoHitEnabled then
-        autoHitBtn.Text = "Auto Hit [F7]: ON"
+        autoHitBtn.Text = "Auto Hit [F6]: ON"
         autoHitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
         autoHitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     else
-        autoHitBtn.Text = "Auto Hit [F7]: OFF"
+        autoHitBtn.Text = "Auto Hit [F6]: OFF"
         autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
     end
@@ -636,7 +614,6 @@ RunService.Heartbeat:Connect(function()
             
             task.spawn(function()
                 pcall(function()
-                    -- Fire all specified remotes safely if they exist
                     for _, remote in ipairs(remotes) do
                         if remote then
                             pcall(function()
@@ -674,8 +651,10 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             if AutoPickupModule.Active then AutoPickupModule.Stop() else AutoPickupModule.Start() end
         elseif input.KeyCode == Enum.KeyCode.F4 then
             toggleNpcEsp()
-        elseif input.KeyCode == Enum.KeyCode.F5 then -- Changed from F7 to F5 to match your intent
-            toggleAutoHit()                        -- Now toggles Auto Hit on F5!
+        elseif input.KeyCode == Enum.KeyCode.F5 then
+            teleportToBandit()
+        elseif input.KeyCode == Enum.KeyCode.F7 then
+            toggleAutoHit()
         end
     end
 end)
