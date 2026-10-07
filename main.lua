@@ -481,31 +481,20 @@ end
 tpBackBanditBtn.MouseButton1Click:Connect(teleportToBandit)
 
 --------------------------------------------------------------------------------
--- AUTO HIT MODULE (Triggers Mobile Touch Action Button)
+-- AUTO HIT MODULE (Direct Remote Event Trigger)
 --------------------------------------------------------------------------------
+local clientSource = ReplicatedStorage:FindFirstChild("ClientSource")
+local damageDealtRE = clientSource 
+    and clientSource:FindFirstChild("Mutual") 
+    and clientSource.Mutual:FindFirstChild("Packages") 
+    and clientSource.Mutual.Packages:FindFirstChild("Knit") 
+    and clientSource.Mutual.Packages.Knit:FindFirstChild("Services") 
+    and clientSource.Mutual.Packages.Knit.Services:FindFirstChild("DamageService") 
+    and clientSource.Mutual.Packages.Knit.Services.DamageService:FindFirstChild("RE") 
+    and clientSource.Mutual.Packages.Knit.Services.DamageService.RE:FindFirstChild("DamageDealt")
+
 local autoHitEnabled = false
 local lastHitTick = 0
-
-local function getMobileActivateButton()
-    local success, btn = pcall(function()
-        return player.PlayerGui.TouchControls.MobileControls.Actions.Item_Activate
-    end)
-    if success and btn then return btn end
-    return nil
-end
-
-local function triggerHitAction()
-    local actBtn = getMobileActivateButton()
-    if actBtn then
-        -- Fire all mouse/touch button connections hooked to the mobile item activate button
-        for _, connection in ipairs(getconnections(actBtn.MouseButton1Click) or {}) do
-            pcall(function() connection.Function() end)
-        end
-        for _, connection in ipairs(getconnections(actBtn.Activated) or {}) do
-            pcall(function() connection.Function() end)
-        end
-    end
-end
 
 local function toggleAutoHit()
     autoHitEnabled = not autoHitEnabled
@@ -523,15 +512,18 @@ end
 autoHitBtn.MouseButton1Click:Connect(toggleAutoHit)
 
 RunService.Heartbeat:Connect(function()
-    if autoHitEnabled and (tick() - lastHitTick >= 0.1) then
+    if autoHitEnabled and (tick() - lastHitTick >= 0.15) then
         lastHitTick = tick()
         task.spawn(function()
             pcall(function()
-                triggerHitAction()
+                if damageDealtRE then
+                    damageDealtRE:FireServer()
+                end
             end)
         end)
     end
 end)
+
 
 --------------------------------------------------------------------------------
 -- GLOBAL KEYBIND LISTENER (PC Support)
