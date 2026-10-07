@@ -446,7 +446,7 @@ end
 npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
 
 --------------------------------------------------------------------------------
--- TELEPORT TO BANDIT MODULE
+-- TELEPORT TO BANDIT MODULE (No Health Check)
 --------------------------------------------------------------------------------
 local function teleportToBandit()
     local char = player.Character
@@ -481,48 +481,30 @@ end
 tpBackBanditBtn.MouseButton1Click:Connect(teleportToBandit)
 
 --------------------------------------------------------------------------------
--- AUTO HIT MODULE (With Namecall Hook)
+-- AUTO HIT MODULE (Triggers Mobile Touch Action Button)
 --------------------------------------------------------------------------------
-local clientSource = ReplicatedStorage:FindFirstChild("ClientSource")
-local replicaSignal = clientSource 
-    and clientSource:FindFirstChild("ReplicaRemoteEvents") 
-    and clientSource.ReplicaRemoteEvents:FindFirstChild("Replica_ReplicaSignal")
-
-local remotes = {
-    replicaSignal,
-    clientSource and clientSource.Mutual.Packages.Knit.Services.DamageService.RE.DamageDealt,
-    clientSource and clientSource.Mutual.Packages.Knit.Services.ItemService.RF.EquipItem,
-}
-
-local oldNamecall
-pcall(function()
-    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        local method = getnamecallmethod()
-        return oldNamecall(self, ...)
-    end)
-end)
-
 local autoHitEnabled = false
-local attackOrderTicker = 1
 local lastHitTick = 0
 
-local function findNearbyTarget(character)
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if not rootPart then return nil end
-    
-    local entityContainer = Workspace:FindFirstChild("ENTITY_CONTAINER")
-    if entityContainer then
-        for _, obj in ipairs(entityContainer:GetChildren()) do
-            local humanoid = obj:FindFirstChildOfClass("Humanoid")
-            local targetRoot = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
-            if humanoid and humanoid.Health > 0 and targetRoot then
-                if (targetRoot.Position - rootPart.Position).Magnitude <= 18 then
-                    return targetRoot
-                end
-            end
+local function getMobileActivateButton()
+    local success, btn = pcall(function()
+        return player.PlayerGui.TouchControls.MobileControls.Actions.Item_Activate
+    end)
+    if success and btn then return btn end
+    return nil
+end
+
+local function triggerHitAction()
+    local actBtn = getMobileActivateButton()
+    if actBtn then
+        -- Fire all mouse/touch button connections hooked to the mobile item activate button
+        for _, connection in ipairs(getconnections(actBtn.MouseButton1Click) or {}) do
+            pcall(function() connection.Function() end)
+        end
+        for _, connection in ipairs(getconnections(actBtn.Activated) or {}) do
+            pcall(function() connection.Function() end)
         end
     end
-    return nil
 end
 
 local function toggleAutoHit()
@@ -543,31 +525,11 @@ autoHitBtn.MouseButton1Click:Connect(toggleAutoHit)
 RunService.Heartbeat:Connect(function()
     if autoHitEnabled and (tick() - lastHitTick >= 0.1) then
         lastHitTick = tick()
-        local character = player.Character
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            local lookVector = CurrentCamera.CFrame.LookVector
-            local targetPart = findNearbyTarget(character)
-            local hitPos = targetPart and targetPart.Position or (character.HumanoidRootPart.Position + (lookVector * 5))
-            local hitTarget = targetPart or character.HumanoidRootPart
-            
-            task.spawn(function()
-                pcall(function()
-                    for _, remote in ipairs(remotes) do
-                        if remote then
-                            pcall(function()
-                                if remote:IsA("RemoteEvent") then
-                                    remote:FireServer("Melee", "Attack", lookVector, attackOrderTicker)
-                                    remote:FireServer("Melee", "Hit", hitTarget, hitPos, Vector3.new(0, 1, 0), Enum.Material.SmoothPlastic)
-                                elseif remote:IsA("RemoteFunction") then
-                                    remote:InvokeServer("Melee", "Attack", lookVector, attackOrderTicker)
-                                end
-                            end)
-                        end
-                    end
-                    attackOrderTicker = (attackOrderTicker % 3) + 1
-                end)
+        task.spawn(function()
+            pcall(function()
+                triggerHitAction()
             end)
-        end
+        end)
     end
 end)
 
