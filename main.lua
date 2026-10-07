@@ -21,7 +21,7 @@ screenGui.DisplayOrder = 999999999
 screenGui.Parent = parentContainer
 
 --------------------------------------------------------------------------------
--- MAIN MENU FRAME (Optimized for Mobile Dragging & Sizing)
+-- MAIN MENU FRAME (Supports PC & Mobile Dragging)
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
@@ -30,7 +30,7 @@ mainFrame.Position = UDim2.new(0.5, -120, 0.4, -190)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
-mainFrame.Draggable = true -- Built-in mobile/PC dragging support
+mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
 local corner = Instance.new("UICorner")
@@ -42,7 +42,7 @@ titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(0.8, 0, 0, 30)
 titleLabel.Position = UDim2.new(0.05, 0, 0, 5)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Last Stop v1 (Mobile Fix)"
+titleLabel.Text = "Last Stop v1 (PC & Mobile)"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 14
 titleLabel.Font = Enum.Font.SourceSansBold
@@ -65,12 +65,12 @@ exitButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- Mobile Friendly UI Buttons
+-- UI Buttons
 local tpButton = Instance.new("TextButton")
 tpButton.Size = UDim2.new(0.9, 0, 0, 35)
 tpButton.Position = UDim2.new(0.05, 0, 0.12, 0)
 tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-tpButton.Text = "Teleport to Bus"
+tpButton.Text = "Teleport to Bus [F1]"
 tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
 tpButton.TextSize = 13
 tpButton.Font = Enum.Font.SourceSansBold
@@ -81,7 +81,7 @@ local autoPickupBtn = Instance.new("TextButton")
 autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 35)
 autoPickupBtn.Position = UDim2.new(0.05, 0, 0.30, 0)
 autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-autoPickupBtn.Text = "Auto PickUP: OFF"
+autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
 autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 autoPickupBtn.TextSize = 13
 autoPickupBtn.Font = Enum.Font.SourceSansBold
@@ -92,7 +92,7 @@ local npcEspBtn = Instance.new("TextButton")
 npcEspBtn.Size = UDim2.new(0.9, 0, 0, 35)
 npcEspBtn.Position = UDim2.new(0.05, 0, 0.48, 0)
 npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-npcEspBtn.Text = "Entities ESP: OFF"
+npcEspBtn.Text = "Entities ESP [F4]: OFF"
 npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 npcEspBtn.TextSize = 13
 npcEspBtn.Font = Enum.Font.SourceSansBold
@@ -103,10 +103,10 @@ local tpBackBanditBtn = Instance.new("TextButton")
 tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 35)
 tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.66, 0)
 tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-tpBackBanditBtn.Text = "Tp to Bandit"
+tpBackBanditBtn.Text = "Tp to Bandit [F5]"
 tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 tpBackBanditBtn.TextSize = 13
-tpBackBanditBtn.Font =Enum.Font.SourceSansBold
+tpBackBanditBtn.Font = Enum.Font.SourceSansBold
 tpBackBanditBtn.Parent = mainFrame
 Instance.new("UICorner", tpBackBanditBtn).CornerRadius = UDim.new(0, 6)
 
@@ -114,7 +114,7 @@ local autoHitBtn = Instance.new("TextButton")
 autoHitBtn.Size = UDim2.new(0.9, 0, 0, 35)
 autoHitBtn.Position = UDim2.new(0.05, 0, 0.84, 0)
 autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-autoHitBtn.Text = "Auto Hit: OFF"
+autoHitBtn.Text = "Auto Hit [F6]: OFF"
 autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 autoHitBtn.TextSize = 13
 autoHitBtn.Font = Enum.Font.SourceSansBold
@@ -289,7 +289,7 @@ function AutoPickupModule.Start()
     if AutoPickupModule.Active then return end
     AutoPickupModule.Active = true
     
-    autoPickupBtn.Text = "Auto PickUP: ON"
+    autoPickupBtn.Text = "Auto PickUP [F3]: ON"
     autoPickupBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
     autoPickupBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 
@@ -360,7 +360,7 @@ end
 
 function AutoPickupModule.Stop()
     AutoPickupModule.Active = false
-    autoPickupBtn.Text = "Auto PickUP: OFF"
+    autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
     autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
     teleportToBus()
@@ -429,20 +429,21 @@ local function startNpcEspLoop()
     end)
 end
 
-npcEspBtn.MouseButton1Click:Connect(function()
+local function toggleNpcEsp()
     npcEspActive = not npcEspActive
     if npcEspActive then
-        npcEspBtn.Text = "Entities ESP: ON"
+        npcEspBtn.Text = "Entities ESP [F4]: ON"
         npcEspBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
         npcEspBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         startNpcEspLoop()
     else
-        npcEspBtn.Text = "Entities ESP: OFF"
+        npcEspBtn.Text = "Entities ESP [F4]: OFF"
         npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
         removeNpcESP()
     end
-end)
+end
+npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
 
 --------------------------------------------------------------------------------
 -- TELEPORT TO BANDIT MODULE
@@ -459,9 +460,8 @@ local function teleportToBandit()
         for _, entityFolder in ipairs(entityContainer:GetChildren()) do
             local matchedName = getEntityMatchedName(entityFolder)
             if matchedName == "bandit" then
-                local humanoid = entityFolder:FindFirstChildOfClass("Humanoid")
-                local targetPart = entityFolder:FindFirstChild("HumanoidRootPart") or entityFolder:FindFirstChild("Torso")
-                if humanoid and targetPart and humanoid.Health > 0 then
+                local targetPart = entityFolder:FindFirstChild("HumanoidRootPart") or entityFolder:FindFirstChild("Torso") or entityFolder:FindFirstChildOfClass("BasePart")
+                if targetPart then
                     local dist = (root.Position - targetPart.Position).Magnitude
                     if dist < shortestDist then
                         shortestDist = dist
@@ -481,7 +481,7 @@ end
 tpBackBanditBtn.MouseButton1Click:Connect(teleportToBandit)
 
 --------------------------------------------------------------------------------
--- AUTO HIT MODULE (Mobile Safe Remotes)
+-- AUTO HIT MODULE (With Namecall Hook)
 --------------------------------------------------------------------------------
 local clientSource = ReplicatedStorage:FindFirstChild("ClientSource")
 local replicaSignal = clientSource 
@@ -493,6 +493,14 @@ local remotes = {
     clientSource and clientSource.Mutual.Packages.Knit.Services.DamageService.RE.DamageDealt,
     clientSource and clientSource.Mutual.Packages.Knit.Services.ItemService.RF.EquipItem,
 }
+
+local oldNamecall
+pcall(function()
+    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        local method = getnamecallmethod()
+        return oldNamecall(self, ...)
+    end)
+end)
 
 local autoHitEnabled = false
 local attackOrderTicker = 1
@@ -517,18 +525,20 @@ local function findNearbyTarget(character)
     return nil
 end
 
-autoHitBtn.MouseButton1Click:Connect(function()
+local function toggleAutoHit()
     autoHitEnabled = not autoHitEnabled
     if autoHitEnabled then
-        autoHitBtn.Text = "Auto Hit: ON"
+        autoHitBtn.Text = "Auto Hit [F6]: ON"
         autoHitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
         autoHitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     else
-        autoHitBtn.Text = "Auto Hit: OFF"
+        autoHitBtn.Text = "Auto Hit [F6]: OFF"
         autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
     end
-end)
+end
+
+autoHitBtn.MouseButton1Click:Connect(toggleAutoHit)
 
 RunService.Heartbeat:Connect(function()
     if autoHitEnabled and (tick() - lastHitTick >= 0.1) then
@@ -557,6 +567,25 @@ RunService.Heartbeat:Connect(function()
                     attackOrderTicker = (attackOrderTicker % 3) + 1
                 end)
             end)
+        end
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- GLOBAL KEYBIND LISTENER (PC Support)
+--------------------------------------------------------------------------------
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        if input.KeyCode == Enum.KeyCode.F1 then
+            teleportToBus()
+        elseif input.KeyCode == Enum.KeyCode.F3 then
+            if AutoPickupModule.Active then AutoPickupModule.Stop() else AutoPickupModule.Start() end
+        elseif input.KeyCode == Enum.KeyCode.F4 then
+            toggleNpcEsp()
+        elseif input.KeyCode == Enum.KeyCode.F5 then
+            teleportToBandit()
+        elseif input.KeyCode == Enum.KeyCode.F6 then
+            toggleAutoHit()
         end
     end
 end)
