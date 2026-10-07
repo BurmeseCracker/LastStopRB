@@ -21,51 +21,28 @@ screenGui.DisplayOrder = 999999999
 screenGui.Parent = parentContainer
 
 --------------------------------------------------------------------------------
--- MAIN MENU FRAME
+-- MAIN MENU FRAME (Optimized for Mobile Dragging & Sizing)
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 220, 0, 360)
-mainFrame.Position = UDim2.new(0.35, -110, 0.5, -180)
+mainFrame.Size = UDim2.new(0, 240, 0, 380)
+mainFrame.Position = UDim2.new(0.5, -120, 0.4, -190)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
+mainFrame.Draggable = true -- Built-in mobile/PC dragging support
 mainFrame.Parent = screenGui
 
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 8)
 corner.Parent = mainFrame
 
-local function enableDrag(frame)
-    local dragging, dragInput, dragStart, startPos
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
-        end
-    end)
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-end
-enableDrag(mainFrame)
-
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(0.8, 0, 0, 30)
 titleLabel.Position = UDim2.new(0.05, 0, 0, 5)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Last Stop v1 + AutoHit (Fast)"
+titleLabel.Text = "Last Stop v1 (Mobile Fix)"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 14
 titleLabel.Font = Enum.Font.SourceSansBold
@@ -74,8 +51,8 @@ titleLabel.Parent = mainFrame
 
 local exitButton = Instance.new("TextButton")
 exitButton.Name = "ExitButton"
-exitButton.Size = UDim2.new(0, 24, 0, 24)
-exitButton.Position = UDim2.new(1, -29, 0, 5)
+exitButton.Size = UDim2.new(0, 28, 0, 28)
+exitButton.Position = UDim2.new(1, -33, 0, 5)
 exitButton.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
 exitButton.Text = "X"
 exitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -83,72 +60,69 @@ exitButton.TextSize = 14
 exitButton.Font = Enum.Font.SourceSansBold
 exitButton.Parent = mainFrame
 
-local exitCorner = Instance.new("UICorner")
-exitCorner.CornerRadius = UDim.new(0, 4)
-exitCorner.Parent = exitButton
-
+Instance.new("UICorner", exitButton).CornerRadius = UDim.new(0, 4)
 exitButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- UI Buttons
+-- Mobile Friendly UI Buttons
 local tpButton = Instance.new("TextButton")
-tpButton.Size = UDim2.new(0.9, 0, 0, 30)
+tpButton.Size = UDim2.new(0.9, 0, 0, 35)
 tpButton.Position = UDim2.new(0.05, 0, 0.12, 0)
 tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-tpButton.Text = "Teleport to Bus [F1]: OFF"
+tpButton.Text = "Teleport to Bus"
 tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-tpButton.TextSize = 12
+tpButton.TextSize = 13
 tpButton.Font = Enum.Font.SourceSansBold
 tpButton.Parent = mainFrame
 Instance.new("UICorner", tpButton).CornerRadius = UDim.new(0, 6)
 
 local autoPickupBtn = Instance.new("TextButton")
-autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 30)
+autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 35)
 autoPickupBtn.Position = UDim2.new(0.05, 0, 0.30, 0)
 autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
+autoPickupBtn.Text = "Auto PickUP: OFF"
 autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-autoPickupBtn.TextSize = 12
+autoPickupBtn.TextSize = 13
 autoPickupBtn.Font = Enum.Font.SourceSansBold
 autoPickupBtn.Parent = mainFrame
 Instance.new("UICorner", autoPickupBtn).CornerRadius = UDim.new(0, 6)
 
 local npcEspBtn = Instance.new("TextButton")
-npcEspBtn.Size = UDim2.new(0.9, 0, 0, 30)
+npcEspBtn.Size = UDim2.new(0.9, 0, 0, 35)
 npcEspBtn.Position = UDim2.new(0.05, 0, 0.48, 0)
 npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-npcEspBtn.Text = "Entities ESP [F4]: OFF"
+npcEspBtn.Text = "Entities ESP: OFF"
 npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-npcEspBtn.TextSize = 12
+npcEspBtn.TextSize = 13
 npcEspBtn.Font = Enum.Font.SourceSansBold
 npcEspBtn.Parent = mainFrame
 Instance.new("UICorner", npcEspBtn).CornerRadius = UDim.new(0, 6)
 
 local tpBackBanditBtn = Instance.new("TextButton")
-tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 30)
+tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 35)
 tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.66, 0)
 tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-tpBackBanditBtn.Text = "Tp to Bandit [F5]"
+tpBackBanditBtn.Text = "Tp to Bandit"
 tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-tpBackBanditBtn.TextSize = 12
-tpBackBanditBtn.Font = Enum.Font.SourceSansBold
+tpBackBanditBtn.TextSize = 13
+tpBackBanditBtn.Font =Enum.Font.SourceSansBold
 tpBackBanditBtn.Parent = mainFrame
 Instance.new("UICorner", tpBackBanditBtn).CornerRadius = UDim.new(0, 6)
 
 local autoHitBtn = Instance.new("TextButton")
-autoHitBtn.Size = UDim2.new(0.9, 0, 0, 30)
+autoHitBtn.Size = UDim2.new(0.9, 0, 0, 35)
 autoHitBtn.Position = UDim2.new(0.05, 0, 0.84, 0)
 autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-autoHitBtn.Text = "Auto Hit [F6]: OFF"
+autoHitBtn.Text = "Auto Hit: OFF"
 autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-autoHitBtn.TextSize = 12
+autoHitBtn.TextSize = 13
 autoHitBtn.Font = Enum.Font.SourceSansBold
 autoHitBtn.Parent = mainFrame
 Instance.new("UICorner", autoHitBtn).CornerRadius = UDim.new(0, 6)
 
 --------------------------------------------------------------------------------
--- SHARED UTILITIES (Bus checking)
+-- SHARED UTILITIES
 --------------------------------------------------------------------------------
 local function getBusBase()
     return Workspace:FindFirstChild("ITEM_CONTAINER")
@@ -165,12 +139,10 @@ local function teleportToBus()
     end
 end
 
-tpButton.MouseButton1Click:Connect(function()
-    teleportToBus()
-end)
+tpButton.MouseButton1Click:Connect(teleportToBus)
 
 --------------------------------------------------------------------------------
--- ENTITY UTILITIES (ESP & Teleport To Bandit helpers)
+-- ENTITY UTILITIES
 --------------------------------------------------------------------------------
 local validEntities = {
     ["bandit"] = true,
@@ -217,13 +189,18 @@ local function getParticleEmitterColor(entityFolder)
 end
 
 --------------------------------------------------------------------------------
--- SEPARATED SYSTEM 1: AUTO PICKUP MODULE
+-- AUTO PICKUP MODULE
 --------------------------------------------------------------------------------
 local AutoPickupModule = {}
 AutoPickupModule.Active = false
 AutoPickupModule.PermanentlyIgnored = {}
 AutoPickupModule.PrioritizedCategories = {"Valuable", "Resources", "Fuel", "Junk", "Weapon", "Medic", "Armor", "Ammo", "Food"}
 AutoPickupModule.CategoryMaps = {}
+
+local ignoredItemNames = {
+    ["candle"] = true,
+    ["empty can"] = true,
+}
 
 function AutoPickupModule.BuildCaches()
     AutoPickupModule.CategoryMaps = {}
@@ -285,9 +262,7 @@ function AutoPickupModule.IsInsideChunk(itemPos)
                     if desc:IsA("BasePart") then
                         local dist = (itemPos - desc.Position).Magnitude
                         local boxSize = math.max(desc.Size.X, desc.Size.Y, desc.Size.Z) + maxDist
-                        if dist <= boxSize then 
-                            return true 
-                        end
+                        if dist <= boxSize then return true end
                     end
                 end
             end
@@ -303,9 +278,7 @@ local function isNearAnySellArea(itemPos)
     for _, chunk in ipairs(chunksContainer:GetChildren()) do
         for _, descendant in ipairs(chunk:GetDescendants()) do
             if descendant.Name == "SellArea" and descendant:IsA("BasePart") then
-                if (itemPos - descendant.Position).Magnitude <= 100 then
-                    return true
-                end
+                if (itemPos - descendant.Position).Magnitude <= 100 then return true end
             end
         end
     end
@@ -316,7 +289,7 @@ function AutoPickupModule.Start()
     if AutoPickupModule.Active then return end
     AutoPickupModule.Active = true
     
-    autoPickupBtn.Text = "Auto PickUP [F3]: ON"
+    autoPickupBtn.Text = "Auto PickUP: ON"
     autoPickupBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
     autoPickupBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 
@@ -347,17 +320,9 @@ function AutoPickupModule.Start()
                                 local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
                                 if targetPart and targetPart:IsA("BasePart") then
                                     local skipItem = false
-                                    
-                                    if busBase and (targetPart.Position - busBase.Position).Magnitude <= 20 then
-                                        skipItem = true
-                                        AutoPickupModule.PermanentlyIgnored[itemFolder] = true
-                                    end
-                                    
-                                    if not skipItem and isNearAnySellArea(targetPart.Position) then
-                                        skipItem = true
-                                        AutoPickupModule.PermanentlyIgnored[itemFolder] = true
-                                    end
-                        
+                                    if busBase and (targetPart.Position - busBase.Position).Magnitude <= 20 then skipItem = true AutoPickupModule.PermanentlyIgnored[itemFolder] = true end
+                                    if not skipItem and isNearAnySellArea(targetPart.Position) then skipItem = true AutoPickupModule.PermanentlyIgnored[itemFolder] = true end
+                                    if not skipItem and not AutoPickupModule.IsInsideChunk(targetPart.Position) then skipItem = true AutoPickupModule.PermanentlyIgnored[itemFolder] = true end
                                     
                                     if not skipItem then
                                         table.insert(sortedItems, {folder = itemFolder, part = targetPart, cat = cat})
@@ -379,7 +344,6 @@ function AutoPickupModule.Start()
                     for _, data in ipairs(sortedItems) do
                         if not AutoPickupModule.Active then break end
                         AutoPickupModule.PermanentlyIgnored[data.folder] = true
-
                         root.AssemblyLinearVelocity = Vector3.zero
                         root.CFrame = data.part.CFrame * CFrame.new(0, 2, 0)
                         task.wait(0.5)
@@ -396,10 +360,9 @@ end
 
 function AutoPickupModule.Stop()
     AutoPickupModule.Active = false
-    autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
+    autoPickupBtn.Text = "Auto PickUP: OFF"
     autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    
     teleportToBus()
 end
 
@@ -431,32 +394,11 @@ local function startNpcEspLoop()
                 for i = 1, #children do
                     local entityFolder = children[i]
                     if not npcEspActive then break end
-                    
                     local matchedName = getEntityMatchedName(entityFolder)
 
                     if matchedName then
                         currentActiveNpcs[entityFolder] = true
-                        local espColor = getParticleEmitterColor(entityFolder)
-                        
-                        if not espColor then
-                            local lowerFolderString = string.lower(entityFolder.Name .. tostring(entityFolder:GetFullName()))
-                            
-                            if matchedName == "bandit" then
-                                espColor = Color3.fromRGB(255, 40, 40)
-                            elseif matchedName == "shark" then
-                                espColor = Color3.fromRGB(0, 255, 255)
-                            elseif matchedName == "vampire" or string.find(lowerFolderString, "vampire") then
-                                espColor = Color3.fromRGB(170, 0, 255)
-                            elseif string.find(lowerFolderString, "radioactive") or string.find(lowerFolderString, "acidcough") then
-                                espColor = Color3.fromRGB(40, 255, 40)
-                            elseif string.find(lowerFolderString, "flame") then
-                                espColor = Color3.fromRGB(255, 140, 0)
-                            elseif string.find(lowerFolderString, "stalker") or string.find(lowerFolderString, "frost") or string.find(lowerFolderString, "parasitic") then
-                                espColor = Color3.fromRGB(170, 0, 255)
-                            else
-                                espColor = Color3.fromRGB(100, 110, 60)
-                            end
-                        end
+                        local espColor = getParticleEmitterColor(entityFolder) or Color3.fromRGB(255, 40, 40)
 
                         if not npcESPTracked[entityFolder] then
                             local highlight = Instance.new("Highlight")
@@ -481,31 +423,29 @@ local function startNpcEspLoop()
                     npcESPTracked[targetObj] = nil
                 end
             end
-
             task.wait(0.5)
         end
         removeNpcESP()
     end)
 end
 
-local function toggleNpcEsp()
+npcEspBtn.MouseButton1Click:Connect(function()
     npcEspActive = not npcEspActive
     if npcEspActive then
-        npcEspBtn.Text = "Entities ESP [F4]: ON"
+        npcEspBtn.Text = "Entities ESP: ON"
         npcEspBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
         npcEspBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         startNpcEspLoop()
     else
-        npcEspBtn.Text = "Entities ESP [F4]: OFF"
+        npcEspBtn.Text = "Entities ESP: OFF"
         npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
         removeNpcESP()
     end
-end
-npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
+end)
 
 --------------------------------------------------------------------------------
--- TELEPORT TO BANDIT SYSTEM [F5]
+-- TELEPORT TO BANDIT MODULE
 --------------------------------------------------------------------------------
 local function teleportToBandit()
     local char = player.Character
@@ -541,7 +481,7 @@ end
 tpBackBanditBtn.MouseButton1Click:Connect(teleportToBandit)
 
 --------------------------------------------------------------------------------
--- AUTO HIT SYSTEM [F6] (With Custom Remotes Integrated)
+-- AUTO HIT MODULE (Mobile Safe Remotes)
 --------------------------------------------------------------------------------
 local clientSource = ReplicatedStorage:FindFirstChild("ClientSource")
 local replicaSignal = clientSource 
@@ -550,16 +490,8 @@ local replicaSignal = clientSource
 
 local remotes = {
     replicaSignal,
-    clientSource and clientSource.Mutual.Packages.Knit.Services.BindService.RE.BindGroupCreated,
-    clientSource and clientSource.Mutual.Packages.Knit.Services.BindService.RE.BindGroupUpdated,
-    clientSource and clientSource.Mutual.Packages.Knit.Services.BindService.RE.ItemBound,
     clientSource and clientSource.Mutual.Packages.Knit.Services.DamageService.RE.DamageDealt,
-    clientSource and clientSource.Mutual.Packages.Knit.Services.EffectService.RE.Play,
-    clientSource and clientSource.Mutual.Packages.Knit.Services.ItemService.RE.Initialized,
     clientSource and clientSource.Mutual.Packages.Knit.Services.ItemService.RF.EquipItem,
-    clientSource and clientSource.Mutual.Packages.Knit.Services.ItemService.RF.ToggleEquip,
-    clientSource and clientSource.Mutual.Packages.Knit.Services.MethodService.RE.MethodCalled,
-    clientSource and clientSource.RedEvent
 }
 
 local autoHitEnabled = false
@@ -576,8 +508,7 @@ local function findNearbyTarget(character)
             local humanoid = obj:FindFirstChildOfClass("Humanoid")
             local targetRoot = obj:FindFirstChild("HumanoidRootPart") or obj.PrimaryPart
             if humanoid and humanoid.Health > 0 and targetRoot then
-                local distance = (targetRoot.Position - rootPart.Position).Magnitude
-                if distance <= 18 then
+                if (targetRoot.Position - rootPart.Position).Magnitude <= 18 then
                     return targetRoot
                 end
             end
@@ -586,25 +517,22 @@ local function findNearbyTarget(character)
     return nil
 end
 
-local function toggleAutoHit()
+autoHitBtn.MouseButton1Click:Connect(function()
     autoHitEnabled = not autoHitEnabled
     if autoHitEnabled then
-        autoHitBtn.Text = "Auto Hit [F6]: ON"
+        autoHitBtn.Text = "Auto Hit: ON"
         autoHitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
         autoHitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     else
-        autoHitBtn.Text = "Auto Hit [F6]: OFF"
+        autoHitBtn.Text = "Auto Hit: OFF"
         autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
     end
-end
-
-autoHitBtn.MouseButton1Click:Connect(toggleAutoHit)
+end)
 
 RunService.Heartbeat:Connect(function()
     if autoHitEnabled and (tick() - lastHitTick >= 0.1) then
         lastHitTick = tick()
-        
         local character = player.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
             local lookVector = CurrentCamera.CFrame.LookVector
@@ -626,35 +554,9 @@ RunService.Heartbeat:Connect(function()
                             end)
                         end
                     end
-
                     attackOrderTicker = (attackOrderTicker % 3) + 1
                 end)
             end)
-
-            pcall(function()
-                if mouse1click then
-                    mouse1click()
-                end
-            end)
-        end
-    end
-end)
-
---------------------------------------------------------------------------------
--- GLOBAL KEYBIND LISTENER
---------------------------------------------------------------------------------
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed then
-        if input.KeyCode == Enum.KeyCode.F1 then
-            teleportToBus()
-        elseif input.KeyCode == Enum.KeyCode.F3 then
-            if AutoPickupModule.Active then AutoPickupModule.Stop() else AutoPickupModule.Start() end
-        elseif input.KeyCode == Enum.KeyCode.F4 then
-            toggleNpcEsp()
-        elseif input.KeyCode == Enum.KeyCode.F5 then
-            teleportToBandit()
-        elseif input.KeyCode == Enum.KeyCode.F7 then
-            toggleAutoHit()
         end
     end
 end)
