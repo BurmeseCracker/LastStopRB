@@ -25,8 +25,8 @@ screenGui.Parent = parentContainer
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 240, 0, 380)
-mainFrame.Position = UDim2.new(0.5, -120, 0.4, -190)
+mainFrame.Size = UDim2.new(0, 240, 0, 335)
+mainFrame.Position = UDim2.new(0.5, -120, 0.4, -165)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -68,7 +68,7 @@ end)
 -- UI Buttons
 local tpButton = Instance.new("TextButton")
 tpButton.Size = UDim2.new(0.9, 0, 0, 35)
-tpButton.Position = UDim2.new(0.05, 0, 0.12, 0)
+tpButton.Position = UDim2.new(0.05, 0, 0.15, 0)
 tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 tpButton.Text = "Teleport to Bus [F1]"
 tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -79,7 +79,7 @@ Instance.new("UICorner", tpButton).CornerRadius = UDim.new(0, 6)
 
 local autoPickupBtn = Instance.new("TextButton")
 autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 35)
-autoPickupBtn.Position = UDim2.new(0.05, 0, 0.30, 0)
+autoPickupBtn.Position = UDim2.new(0.05, 0, 0.35, 0)
 autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
 autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -90,7 +90,7 @@ Instance.new("UICorner", autoPickupBtn).CornerRadius = UDim.new(0, 6)
 
 local npcEspBtn = Instance.new("TextButton")
 npcEspBtn.Size = UDim2.new(0.9, 0, 0, 35)
-npcEspBtn.Position = UDim2.new(0.05, 0, 0.48, 0)
+npcEspBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
 npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 npcEspBtn.Text = "Entities ESP [F4]: OFF"
 npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -99,27 +99,16 @@ npcEspBtn.Font = Enum.Font.SourceSansBold
 npcEspBtn.Parent = mainFrame
 Instance.new("UICorner", npcEspBtn).CornerRadius = UDim.new(0, 6)
 
-local tpBackBanditBtn = Instance.new("TextButton")
-tpBackBanditBtn.Size = UDim2.new(0.9, 0, 0, 35)
-tpBackBanditBtn.Position = UDim2.new(0.05, 0, 0.66, 0)
-tpBackBanditBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-tpBackBanditBtn.Text = "Tp to Bandit [F5]"
-tpBackBanditBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-tpBackBanditBtn.TextSize = 13
-tpBackBanditBtn.Font = Enum.Font.SourceSansBold
-tpBackBanditBtn.Parent = mainFrame
-Instance.new("UICorner", tpBackBanditBtn).CornerRadius = UDim.new(0, 6)
-
-local autoHitBtn = Instance.new("TextButton")
-autoHitBtn.Size = UDim2.new(0.9, 0, 0, 35)
-autoHitBtn.Position = UDim2.new(0.05, 0, 0.84, 0)
-autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-autoHitBtn.Text = "Auto Hit [F6]: OFF"
-autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-autoHitBtn.TextSize = 13
-autoHitBtn.Font = Enum.Font.SourceSansBold
-autoHitBtn.Parent = mainFrame
-Instance.new("UICorner", autoHitBtn).CornerRadius = UDim.new(0, 6)
+local autoDropBtn = Instance.new("TextButton")
+autoDropBtn.Size = UDim2.new(0.9, 0, 0, 35)
+autoDropBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
+autoDropBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+autoDropBtn.Text = "Auto Drop [F5]: OFF"
+autoDropBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+autoDropBtn.TextSize = 13
+autoDropBtn.Font = Enum.Font.SourceSansBold
+autoDropBtn.Parent = mainFrame
+Instance.new("UICorner", autoDropBtn).CornerRadius = UDim.new(0, 6)
 
 --------------------------------------------------------------------------------
 -- SHARED UTILITIES
@@ -196,11 +185,6 @@ AutoPickupModule.Active = false
 AutoPickupModule.PermanentlyIgnored = {}
 AutoPickupModule.PrioritizedCategories = {"Valuable", "Resources", "Fuel", "Junk", "Weapon", "Medic", "Armor", "Ammo", "Food"}
 AutoPickupModule.CategoryMaps = {}
-
-local ignoredItemNames = {
-    ["candle"] = true,
-    ["empty can"] = true,
-}
 
 function AutoPickupModule.BuildCaches()
     AutoPickupModule.CategoryMaps = {}
@@ -312,9 +296,8 @@ function AutoPickupModule.Start()
                     
                     for i = 1, #children do
                         local itemFolder = children[i]
-                        local itemNameLower = string.lower(itemFolder.Name)
                         
-                        if not ignoredItemNames[itemNameLower] and not AutoPickupModule.PermanentlyIgnored[itemFolder] then
+                        if not AutoPickupModule.PermanentlyIgnored[itemFolder] then
                             local cat = AutoPickupModule.GetCategory(itemFolder)
                             if cat then
                                 local targetPart = itemFolder:FindFirstChild("Main", true) or itemFolder:FindFirstChildOfClass("BasePart")
@@ -446,84 +429,71 @@ end
 npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
 
 --------------------------------------------------------------------------------
--- TELEPORT TO BANDIT MODULE (No Health Check)
---------------------------------------------------------------------------------
-local function teleportToBandit()
-    local char = player.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    local entityContainer = Workspace:FindFirstChild("ENTITY_CONTAINER")
-
-    if root and entityContainer then
-        local nearestBanditPart = nil
-        local shortestDist = math.huge
-
-        for _, entityFolder in ipairs(entityContainer:GetChildren()) do
-            local matchedName = getEntityMatchedName(entityFolder)
-            if matchedName == "bandit" then
-                local targetPart = entityFolder:FindFirstChild("HumanoidRootPart") or entityFolder:FindFirstChild("Torso") or entityFolder:FindFirstChildOfClass("BasePart")
-                if targetPart then
-                    local dist = (root.Position - targetPart.Position).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        nearestBanditPart = targetPart
-                    end
-                end
-            end
-        end
-
-        if nearestBanditPart then
-            root.AssemblyLinearVelocity = Vector3.zero
-            root.CFrame = nearestBanditPart.CFrame * CFrame.new(0, -3, 0)
-        end
-    end
-end
-
-tpBackBanditBtn.MouseButton1Click:Connect(teleportToBandit)
-
---------------------------------------------------------------------------------
--- AUTO HIT MODULE (Direct Remote Event Trigger)
+-- AUTO DROP MODULE
 --------------------------------------------------------------------------------
 local clientSource = ReplicatedStorage:FindFirstChild("ClientSource")
-local damageDealtRE = clientSource 
+local knitServices = clientSource 
     and clientSource:FindFirstChild("Mutual") 
     and clientSource.Mutual:FindFirstChild("Packages") 
     and clientSource.Mutual.Packages:FindFirstChild("Knit") 
-    and clientSource.Mutual.Packages.Knit:FindFirstChild("Services") 
-    and clientSource.Mutual.Packages.Knit.Services:FindFirstChild("DamageService") 
-    and clientSource.Mutual.Packages.Knit.Services.DamageService:FindFirstChild("RE") 
-    and clientSource.Mutual.Packages.Knit.Services.DamageService.RE:FindFirstChild("DamageDealt")
+    and clientSource.Mutual.Packages.Knit:FindFirstChild("Services")
 
-local autoHitEnabled = false
-local lastHitTick = 0
+local itemServiceRF = knitServices and knitServices:FindFirstChild("ItemService") and knitServices.ItemService:FindFirstChild("RF")
+local itemServiceRE = knitServices and knitServices:FindFirstChild("ItemService") and knitServices.ItemService:FindFirstChild("RE")
+local methodServiceRE = knitServices and knitServices:FindFirstChild("MethodService") and knitServices.MethodService:FindFirstChild("RE")
 
-local function toggleAutoHit()
-    autoHitEnabled = not autoHitEnabled
-    if autoHitEnabled then
-        autoHitBtn.Text = "Auto Hit [F6]: ON"
-        autoHitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
-        autoHitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+local dropItemRF = itemServiceRF and itemServiceRF:FindFirstChild("DropItem")
+local toggleEquipRF = itemServiceRF and itemServiceRF:FindFirstChild("ToggleEquip")
+local inventoryChangedRE = itemServiceRE and itemServiceRE:FindFirstChild("InventoryChanged")
+local methodCalledRE = methodServiceRE and methodServiceRE:FindFirstChild("MethodCalled")
+
+local replicaRemoteEvents = clientSource and clientSource:FindFirstChild("ReplicaRemoteEvents")
+local replicaInsertRE = replicaRemoteEvents and replicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayInsert")
+local replicaRemoveRE = replicaRemoteEvents and replicaRemoteEvents:FindFirstChild("Replica_ReplicaArrayRemove")
+
+local autoDropEnabled = false
+local lastDropTick = 0
+
+local function toggleAutoDrop()
+    autoDropEnabled = not autoDropEnabled
+    if autoDropEnabled then
+        autoDropBtn.Text = "Auto Drop [F5]: ON"
+        autoDropBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+        autoDropBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     else
-        autoHitBtn.Text = "Auto Hit [F6]: OFF"
-        autoHitBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-        autoHitBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        autoDropBtn.Text = "Auto Drop [F5]: OFF"
+        autoDropBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        autoDropBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
     end
 end
 
-autoHitBtn.MouseButton1Click:Connect(toggleAutoHit)
+autoDropBtn.MouseButton1Click:Connect(toggleAutoDrop)
 
 RunService.Heartbeat:Connect(function()
-    if autoHitEnabled and (tick() - lastHitTick >= 0.15) then
-        lastHitTick = tick()
+    if autoDropEnabled and (tick() - lastDropTick >= 0.3) then
+        lastDropTick = tick()
         task.spawn(function()
             pcall(function()
-                if damageDealtRE then
-                    damageDealtRE:FireServer()
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        if not autoDropEnabled then break end
+                        if tool:IsA("Tool") and dropItemRF then
+                            pcall(function() dropItemRF:InvokeServer(tool) end)
+                            if replicaRemoveRE then pcall(function() replicaRemoveRE:FireServer(tool) end) end
+                        end
+                    end
                 end
+                
+                if toggleEquipRF then pcall(function() toggleEquipRF:InvokeServer() end) end
+                if inventoryChangedRE then pcall(function() inventoryChangedRE:FireServer() end) end
+                if methodCalledRE then pcall(function() methodCalledRE:FireServer() end) end
+                if replicaInsertRE then pcall(function() replicaInsertRE:FireServer() end) end
+                if replicaRemoveRE then pcall(function() replicaRemoveRE:FireServer() end) end
             end)
         end)
     end
 end)
-
 
 --------------------------------------------------------------------------------
 -- GLOBAL KEYBIND LISTENER (PC Support)
@@ -537,9 +507,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         elseif input.KeyCode == Enum.KeyCode.F4 then
             toggleNpcEsp()
         elseif input.KeyCode == Enum.KeyCode.F5 then
-            teleportToBandit()
-        elseif input.KeyCode == Enum.KeyCode.F6 then
-            toggleAutoHit()
+            toggleAutoDrop()
         end
     end
 end)
