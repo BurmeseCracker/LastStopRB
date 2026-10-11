@@ -25,8 +25,8 @@ screenGui.Parent = parentContainer
 --------------------------------------------------------------------------------
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 240, 0, 335)
-mainFrame.Position = UDim2.new(0.5, -120, 0.4, -165)
+mainFrame.Size = UDim2.new(0, 240, 0, 380)
+mainFrame.Position = UDim2.new(0.5, -120, 0.4, -190)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -68,7 +68,7 @@ end)
 -- UI Buttons
 local tpButton = Instance.new("TextButton")
 tpButton.Size = UDim2.new(0.9, 0, 0, 35)
-tpButton.Position = UDim2.new(0.05, 0, 0.15, 0)
+tpButton.Position = UDim2.new(0.05, 0, 0.12, 0)
 tpButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 tpButton.Text = "Teleport to Bus [F1]"
 tpButton.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -79,7 +79,7 @@ Instance.new("UICorner", tpButton).CornerRadius = UDim.new(0, 6)
 
 local autoPickupBtn = Instance.new("TextButton")
 autoPickupBtn.Size = UDim2.new(0.9, 0, 0, 35)
-autoPickupBtn.Position = UDim2.new(0.05, 0, 0.35, 0)
+autoPickupBtn.Position = UDim2.new(0.05, 0, 0.28, 0)
 autoPickupBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 autoPickupBtn.Text = "Auto PickUP [F3]: OFF"
 autoPickupBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -90,7 +90,7 @@ Instance.new("UICorner", autoPickupBtn).CornerRadius = UDim.new(0, 6)
 
 local npcEspBtn = Instance.new("TextButton")
 npcEspBtn.Size = UDim2.new(0.9, 0, 0, 35)
-npcEspBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
+npcEspBtn.Position = UDim2.new(0.05, 0, 0.44, 0)
 npcEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 npcEspBtn.Text = "Entities ESP [F4]: OFF"
 npcEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -99,9 +99,20 @@ npcEspBtn.Font = Enum.Font.SourceSansBold
 npcEspBtn.Parent = mainFrame
 Instance.new("UICorner", npcEspBtn).CornerRadius = UDim.new(0, 6)
 
+local itemEspBtn = Instance.new("TextButton")
+itemEspBtn.Size = UDim2.new(0.9, 0, 0, 35)
+itemEspBtn.Position = UDim2.new(0.05, 0, 0.60, 0)
+itemEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+itemEspBtn.Text = "Items ESP [F6]: OFF"
+itemEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+itemEspBtn.TextSize = 13
+itemEspBtn.Font = Enum.Font.SourceSansBold
+itemEspBtn.Parent = mainFrame
+Instance.new("UICorner", itemEspBtn).CornerRadius = UDim.new(0, 6)
+
 local autoDropBtn = Instance.new("TextButton")
 autoDropBtn.Size = UDim2.new(0.9, 0, 0, 35)
-autoDropBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
+autoDropBtn.Position = UDim2.new(0.05, 0, 0.76, 0)
 autoDropBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 autoDropBtn.Text = "Auto Drop [F5]: OFF"
 autoDropBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -429,6 +440,99 @@ end
 npcEspBtn.MouseButton1Click:Connect(toggleNpcEsp)
 
 --------------------------------------------------------------------------------
+-- ITEMS ESP MODULE (Color Coded Categories)
+--------------------------------------------------------------------------------
+local itemEspActive = false
+local itemESPTracked = {}
+
+local itemCategoryColors = {
+    ["Medic"] = Color3.fromRGB(255, 40, 40),      -- Red
+    ["Valuable"] = Color3.fromRGB(50, 255, 50),   -- Lime Green
+    ["Weapon"] = Color3.fromRGB(170, 0, 255),    -- Purple
+    ["Food"] = Color3.fromRGB(255, 140, 0),      -- Orange
+}
+local defaultItemColor = Color3.fromRGB(200, 200, 200) -- White/Gray for all other categories
+
+local function getItemHighlightColor(itemFolder)
+    -- Check particle emitter color first (e.g. sparkles)
+    local emitterColor = getParticleEmitterColor(itemFolder)
+    if emitterColor then return emitterColor end
+
+    -- Check category mapped colors
+    local cat = AutoPickupModule.GetCategory(itemFolder)
+    if cat and itemCategoryColors[cat] then
+        return itemCategoryColors[cat]
+    end
+
+    return defaultItemColor
+end
+
+local function removeItemESP()
+    for _, highlight in pairs(itemESPTracked) do
+        if highlight then highlight:Destroy() end
+    end
+    table.clear(itemESPTracked)
+end
+
+local function startItemEspLoop()
+    task.spawn(function()
+        while itemEspActive do
+            local currentActiveItems = {}
+            local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
+
+            if itemContainer then
+                for _, itemFolder in ipairs(itemContainer:GetChildren()) do
+                    if not itemEspActive then break end
+                    if itemFolder.Name ~= "Bus" then
+                        currentActiveItems[itemFolder] = true
+                        local espColor = getItemHighlightColor(itemFolder)
+
+                        if not itemESPTracked[itemFolder] then
+                            local highlight = Instance.new("Highlight")
+                            highlight.Name = "ItemCustomESP"
+                            highlight.Adornee = itemFolder
+                            highlight.FillColor = espColor
+                            highlight.FillTransparency = 0.5
+                            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                            highlight.OutlineTransparency = 0.1
+                            highlight.Parent = itemFolder
+                            itemESPTracked[itemFolder] = highlight
+                        else
+                            itemESPTracked[itemFolder].FillColor = espColor
+                        end
+                    end
+                end
+            end
+
+            for targetObj, highlight in pairs(itemESPTracked) do
+                if not currentActiveItems[targetObj] or not targetObj.Parent then
+                    if highlight then highlight:Destroy() end
+                    itemESPTracked[targetObj] = nil
+                end
+            end
+            task.wait(0.5)
+        end
+        removeItemESP()
+    end)
+end
+
+local function toggleItemEsp()
+    itemEspActive = not itemEspActive
+    if itemEspActive then
+        itemEspBtn.Text = "Items ESP [F6]: ON"
+        itemEspBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+        itemEspBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        startItemEspLoop()
+    else
+        itemEspBtn.Text = "Items ESP [F6]: OFF"
+        itemEspBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        itemEspBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        removeItemESP()
+    end
+end
+itemEspBtn.MouseButton1Click:Connect(toggleItemEsp)
+
+--------------------------------------------------------------------------------
 -- AUTO DROP MODULE
 --------------------------------------------------------------------------------
 local clientSource = ReplicatedStorage:FindFirstChild("ClientSource")
@@ -508,6 +612,8 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             toggleNpcEsp()
         elseif input.KeyCode == Enum.KeyCode.F5 then
             toggleAutoDrop()
+        elseif input.KeyCode == Enum.KeyCode.F6 then
+            toggleItemEsp()
         end
     end
 end)
