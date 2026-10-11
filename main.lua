@@ -188,7 +188,7 @@ local function getParticleEmitterColor(entityFolder)
     return nil
 end
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
 -- AUTO PICKUP MODULE
 --------------------------------------------------------------------------------
 local AutoPickupModule = {}
@@ -302,6 +302,13 @@ function AutoPickupModule.Start()
                 local itemContainer = Workspace:FindFirstChild("ITEM_CONTAINER")
                 
                 if itemContainer then
+                    -- Clean up destroyed items from ignore list so memory doesn't leak
+                    for ignoredItem, _ in pairs(AutoPickupModule.PermanentlyIgnored) do
+                        if not ignoredItem or not ignoredItem.Parent then
+                            AutoPickupModule.PermanentlyIgnored[ignoredItem] = nil
+                        end
+                    end
+
                     local children = itemContainer:GetChildren()
                     local sortedItems = {}
                     
@@ -454,11 +461,9 @@ local itemCategoryColors = {
 local defaultItemColor = Color3.fromRGB(200, 200, 200) -- White/Gray for all other categories
 
 local function getItemHighlightColor(itemFolder)
-    -- Check particle emitter color first (e.g. sparkles)
     local emitterColor = getParticleEmitterColor(itemFolder)
     if emitterColor then return emitterColor end
 
-    -- Check category mapped colors
     local cat = AutoPickupModule.GetCategory(itemFolder)
     if cat and itemCategoryColors[cat] then
         return itemCategoryColors[cat]
